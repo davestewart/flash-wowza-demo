@@ -30,19 +30,18 @@ package display.views {
 		// { region : Variables
 		
 			// variables
-				protected var connection				:NetConnection					= null;
+				protected var connection				:NetConnection;
 				
-				protected var nsPublish					:NetStream						= null;             
-				protected var nsPlay					:NetStream						= null;
+				protected var nsPublish					:NetStream;        
+				protected var nsPlay					:NetStream;
 				
-				protected var camera					:Camera							= null;
-				protected var microphone				:Microphone						= null;
+				protected var camera					:Camera;
+				protected var microphone				:Microphone;
 				
-				protected var serverName				:String							= "rtmp://localhost/webcamrecording";
-				protected var movieName					:String							= "recording1";
+				protected var serverName				:String;
+				protected var movieName					:String;
 				
-				protected var flushVideoBufferTimer		:Number							= 0;
-				protected var h264Settings				:H264VideoStreamSettings		= new H264VideoStreamSettings();
+				protected var flushVideoBufferTimer		:Number;
 				
 				protected var sizes						:Array;
 				protected var size						:Array;
@@ -53,8 +52,23 @@ package display.views {
 		
 			public function WebCam():void
 			{
-				// new settings for wowza live
+				// setup
+					setupServer();
+					setupSettings();
+					setupUI();
 					
+				// set up camera
+					setupCamera();
+					updateCamera();
+					onConnectClick(null);
+			}
+			
+		// ----------------------------------------------------------------------------------------------------------
+		// { region : UI
+		
+			protected function setupServer():void
+			{
+				// new settings for wowza live
 					var port		:int			= 1935;
 					var user		:String			= 'mixoff';
 					var pass		:String			= '20mixoff14';
@@ -64,10 +78,17 @@ package display.views {
 					serverName						= 'http://mixoff:20mixoff14@54.77.120.150/:1935';
 					serverName						= 'http://54.77.120.150/';
 					*/
-				
-				// video settings
-					h264Settings.setProfileLevel(H264Profile.BASELINE, H264Level.LEVEL_3_1);
 					
+					serverName						= "rtmp://localhost/webcamrecording";
+					movieName						= "recording1";
+			}
+
+			protected function setupSettings():void 
+			{
+				// text fields
+					tfName.text				= movieName;
+					tfServer.text			= serverName;
+
 				// sizes
 					sizes = 
 					[
@@ -88,7 +109,10 @@ package display.views {
 					
 				// quality
 					stpQuality.addEventListener(Event.CHANGE, onQualityChange);
-					
+			}
+			
+			protected function setupUI():void 
+			{
 				// prepare video
 					flipVideo(videoCamera);
 					flipVideo(videoRemote);
@@ -96,28 +120,43 @@ package display.views {
 				// event handlers
 					btnPublish.addEventListener(MouseEvent.CLICK, onRecordClick);
 					btnSubscribe.addEventListener(MouseEvent.CLICK, onPlayClick);
-					
-				// update UI
-					tfName.text				= movieName;
-					tfServer.text			= serverName;
-					cbAppend.selected		= false;
 					btnConnect.addEventListener(MouseEvent.CLICK, onConnectClick);
 					
-				// set play controls to false
+				// disable play controls
 					enablePlayControls(false);
-					
-				// set up camera
-					if ( ! camera )
-					{
-						trace('user has to click...');
-						setupCamera();
-						updateCamera();
-						onConnectClick(null);
-					}
 			}
 			
+			private function onSizeSelect(event:Event):void 
+			{
+				size = sizes[comboSizes.selectedIndex];
+				updateCamera();
+			}
+			
+			private function onQualityChange(e:Event):void 
+			{
+				updateCamera();
+			}
+
 			
 		// ----------------------------------------------------------------------------------------------------------
+		// { region : Video
+		
+			protected function enablePlayControls(isEnable:Boolean):void
+			{
+				btnPublish.enabled = isEnable;
+				btnSubscribe.enabled = isEnable;
+				tfName.enabled = isEnable;
+				cbAppend.enabled = isEnable;
+			}
+			
+			protected function flipVideo(video:Video):void
+			{
+				video.scaleX = -video.scaleX;
+				video.x += video.width;
+			}
+			
+
+			// ----------------------------------------------------------------------------------------------------------
 		// { region : Camera
 			
 			protected function setupCamera():void
@@ -176,55 +215,7 @@ package display.views {
 					
 				}
 			}
-		
-
-			
-		// ----------------------------------------------------------------------------------------------------------
-		// { region : Settings		
-
-			private function onSizeSelect(event:Event):void 
-			{
-				size = sizes[comboSizes.selectedIndex];
-				updateCamera();
-			}
-			
-			private function onQualityChange(e:Event):void 
-			{
-				updateCamera();
-			}
-
-			
-		// ----------------------------------------------------------------------------------------------------------
-		// { region : UI
-		
-			protected function enablePlayControls(isEnable:Boolean):void
-			{
-				btnPublish.enabled = isEnable;
-				btnSubscribe.enabled = isEnable;
-				tfName.enabled = isEnable;
-				cbAppend.enabled = isEnable;
-			}
-			
-			protected function flipVideo(video:Video):void
-			{
-				video.scaleX = -video.scaleX;
-				video.x += video.width;
-			}
-			
-			// function to monitor the frame rate and buffer length
-			protected function updateStreamValues():void
-			{
-				if (nsPlay != null)
-				{
-					tfFps.text = (Math.round(nsPlay.currentFPS*1000)/1000)+" fps";
-					tfBufferLength.text = (Math.round(nsPlay.bufferLength*1000)/1000)+" secs";
-				}
-				else
-				{
-					tfFps.text = "";
-					tfBufferLength.text = "";
-				}
-			}
+				
 			
 
 		// ----------------------------------------------------------------------------------------------------------
@@ -289,6 +280,22 @@ package display.views {
 			
 			}
 			
+			// function to monitor the frame rate and buffer length
+			protected function updateStreamValues():void
+			{
+				if (nsPlay != null)
+				{
+					tfFps.text = (Math.round(nsPlay.currentFPS*1000)/1000)+" fps";
+					tfBufferLength.text = (Math.round(nsPlay.bufferLength*1000)/1000)+" secs";
+				}
+				else
+				{
+					tfFps.text = "";
+					tfBufferLength.text = "";
+				}
+			}
+
+			
 			protected function onConnectionStatus(event:NetStatusEvent):void
 			{
 				var code:String = event.info.code;
@@ -328,49 +335,51 @@ package display.views {
 			{
 				
 				// stop video playback
-				stopPlaying();
+					stopPlaying();
 				
 				// create a new NetStream object for publishing
-				nsPublish = new NetStream(connection);
+					nsPublish = new NetStream(connection);
 				
 				// add h264 settings
-				nsPublish.videoStreamSettings = h264Settings;
+					var h264Settings:H264VideoStreamSettings = new H264VideoStreamSettings();
+					h264Settings.setProfileLevel(H264Profile.BASELINE, H264Level.LEVEL_3_1);
+					nsPublish.videoStreamSettings = h264Settings;
 
 				// update camera settings
-				var index		:int		= comboSizes.selectedIndex;
-				var size		:Array		= sizes[index];
-				camera.setMode(size[0], size[1], 25, true);
+					var index		:int		= comboSizes.selectedIndex;
+					var size		:Array		= sizes[index];
+					camera.setMode(size[0], size[1], 25, true);
 
-				var nsPublishClient:Object = new Object();
-				nsPublish.client = nsPublishClient;
+					var nsPublishClient:Object = new Object();
+					nsPublish.client = nsPublishClient;
 
 				// trace the NetStream status information
-				nsPublish.addEventListener(NetStatusEvent.NET_STATUS, onStreamPublishStatus);
+					nsPublish.addEventListener(NetStatusEvent.NET_STATUS, onStreamPublishStatus);
 				
 				// publish the stream by name
-				var mode:String = cbAppend.selected ? "append" : "record";
-				nsPublish.publish(tfName.text + '.f4v', mode);
+					var mode:String = cbAppend.selected ? "append" : "record";
+					nsPublish.publish(tfName.text + '.f4v', mode);
 				
 				// do the live streaming
 				//nsPublish.publish('mp4:' + tfName.text, 'live');
-				nsPublish.publish('mp4:' + tfName.text, mode);
+					nsPublish.publish('mp4:' + tfName.text, mode);
 				
 				//nsPublish.publish("mp4:webCamX.f4v", "live");
 				
 				// add custom metadata to the header of the .flv file
-				var metaData:Object = new Object();
-				metaData["description"] = "Recorded using WebcamRecording example."
-				nsPublish.send("@setDataFrame", "onMetaData", metaData);
+					var metaData:Object = new Object();
+					metaData["description"] = "Recorded using WebcamRecording example."
+					nsPublish.send("@setDataFrame", "onMetaData", metaData);
 
 				// attach the camera and microphone to the server
-				nsPublish.attachCamera(camera);
-				nsPublish.attachAudio(microphone);
+					nsPublish.attachCamera(camera);
+					nsPublish.attachAudio(microphone);
 				
 				// set the buffer time to 20 seconds to buffer 20 seconds of video
 				// data for better performance and higher quality video
-				nsPublish.bufferTime = 20;
+					nsPublish.bufferTime = 20;
 
-				btnPublish.label = 'Stop';
+					btnPublish.label = 'Stop';
 			}
 
 			protected function stopRecording():void
@@ -378,32 +387,32 @@ package display.views {
 				// stop streaming video and audio to the publishing
 				// NetStream object
 				//nsPublish.attachAudio(null); // disabled audio so that mp4 will record
-				nsPublish.attachCamera(null);
+					nsPublish.attachCamera(null);
 
 				// After stopping the publishing we need to check if there is
 				// video content in the NetStream buffer. If there is data
 				// we are going to monitor the video upload progress by calling
 				// flushVideoBuffer every 250ms.  If the buffer length is 0
 				// we close the recording immediately.
-				var buffLen:Number = nsPublish.bufferLength;
-				if (buffLen > 0)
-				{
-					flushVideoBufferTimer = setInterval(tryFlushVideoBuffer, 250);
-					btnPublish.label = 'Wait...';
-				}
-				else
-				{
-					trace("nsPublish.publish(null)");
-					finishRecording();		
-					btnPublish.label = 'Record';
-				}
+					var buffLen:Number = nsPublish.bufferLength;
+					if (buffLen > 0)
+					{
+						flushVideoBufferTimer = setInterval(tryFlushVideoBuffer, 250);
+						btnPublish.label = 'Wait...';
+					}
+					else
+					{
+						trace("nsPublish.publish(null)");
+						finishRecording();		
+						btnPublish.label = 'Record';
+					}
 			}
 			
 			protected function finishRecording():void
 			{
 				// after we have hit "Stop" recording and after the buffered video data has been
 				// sent to the Wowza Media Server close the publishing stream
-				nsPublish.publish("null");
+					nsPublish.publish("null");
 			}
 
 			// this function gets called every 250 ms to monitor the
@@ -429,13 +438,13 @@ package display.views {
 				// event of "NetStream.Unpublish.Success" which tells us all the video
 				// and audio data has been written to the flv file. It is at this time
 				// that we can start playing the video we just recorded.
-				if (event.info.code == "NetStream.Unpublish.Success")
-				{
-					startPlaying();
-				}
+					if (event.info.code == "NetStream.Unpublish.Success")
+					{
+						startPlaying();
+					}
 
-				if (event.info.code == "NetStream.Play.StreamNotFound" || event.info.code == "NetStream.Play.Failed")
-					tfPrompt.text = event.info.description;
+					if (event.info.code == "NetStream.Play.StreamNotFound" || event.info.code == "NetStream.Play.Failed")
+						tfPrompt.text = event.info.description;
 			}
 
 
@@ -457,56 +466,56 @@ package display.views {
 				trace("doPlayStart");
 				
 				// each time we play a video create a new NetStream object
-				nsPlay = new NetStream(connection);
-				nsPlay.addEventListener(NetStatusEvent.NET_STATUS, onStreamPlayStatus);
+					nsPlay = new NetStream(connection);
+					nsPlay.addEventListener(NetStatusEvent.NET_STATUS, onStreamPlayStatus);
 					
-				var nsPlayClient:Object = new Object();
-				nsPlay.client = nsPlayClient;
+					var nsPlayClient:Object = new Object();
+					nsPlay.client = nsPlayClient;
 
 				// trace the NetStream play status information
-				nsPlayClient.onPlayStatus = function(infoObject:Object):void
-				{
-					trace("nsPlay: onPlayStatus: "+infoObject.code+" ("+infoObject.description+")");
-					if (infoObject.code == "NetStream.Play.Complete")
+					nsPlayClient.onPlayStatus = function(infoObject:Object):void
 					{
-						stopPlaying();
+						trace("nsPlay: onPlayStatus: "+infoObject.code+" ("+infoObject.description+")");
+						if (infoObject.code == "NetStream.Play.Complete")
+						{
+							stopPlaying();
+						}
 					}
-				}
 
-				nsPlayClient.onMetaData = function(infoObject:Object) :void
-				{
-					trace("onMetaData");
-					
-					// print debug information about the metaData
-					for (var propName:String in infoObject)
+					nsPlayClient.onMetaData = function(infoObject:Object) :void
 					{
-						trace("  "+propName + " = " + infoObject[propName]);
-					}
-				};		
+						trace("onMetaData");
+						
+						// print debug information about the metaData
+						for (var propName:String in infoObject)
+						{
+							trace("  "+propName + " = " + infoObject[propName]);
+						}
+					};		
 
 				// set the buffer time to 2 seconds
-				nsPlay.bufferTime = 2;
+					nsPlay.bufferTime = 2;
 
 				// attach the NetStream object to the right most video object
-				videoRemote.attachNetStream(nsPlay);
+					videoRemote.attachNetStream(nsPlay);
 				
 				// play the movie you just recorded
-				nsPlay.play(tfName.text);
+					nsPlay.play(tfName.text);
 				
-				btnSubscribe.label = 'Stop';
+					btnSubscribe.label = 'Stop';
 			}
 
 			protected function stopPlaying():void
 			{
 				// when you hit stop disconnect from the NetStream object and clear the video player
-				videoRemote.attachNetStream(null);
-				videoRemote.clear();
-				
-				if (nsPlay != null)
-					nsPlay.close();
-				nsPlay = null;
-				
-				btnSubscribe.label = 'Play';
+					videoRemote.attachNetStream(null);
+					videoRemote.clear();
+					
+					if (nsPlay != null)
+						nsPlay.close();
+					nsPlay = null;
+					
+					btnSubscribe.label = 'Play';
 			}
 
 			protected function onStreamPlayStatus(event:NetStatusEvent):void

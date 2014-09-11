@@ -1,0 +1,28 @@
+
+
+
+
+	app
+		
+		Connection
+		
+		Settings
+			
+		
+		VideoPlayer
+			NetStreamPlayer
+			Button - play
+		
+		VideoRecorder
+			server settings
+			NetStreamPlayer
+			additional recording functionality
+			Button - record
+			
+			
+			
+			
+	classes
+		display
+			video
+				NetStreamVideo

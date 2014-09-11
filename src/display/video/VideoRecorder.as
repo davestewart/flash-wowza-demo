@@ -6,7 +6,7 @@ package display.video
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public class VideoRecorder extends NetstreamVideo 
+	public class VideoRecorder extends NetStreamVideo 
 	{
 		
 		

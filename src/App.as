@@ -1,6 +1,6 @@
 package  
 {
-	import display.video.NetstreamVideo;
+	import display.video.NetStreamVideo;
 	import display.video.VideoPlayer;
 	import display.video.VideoRecorder;
 	import display.views.SettingsView;
@@ -24,8 +24,8 @@ package
 			// elements
 				protected var stage			:DisplayObjectContainer;
 				protected var settings		:SettingsView;
-				protected var player		:NetstreamVideo;
-				protected var recorder		:NetstreamVideo;
+				protected var player		:NetStreamVideo;
+				protected var recorder		:NetStreamVideo;
 				
 			
 			// properties

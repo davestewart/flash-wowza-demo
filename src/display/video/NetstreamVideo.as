@@ -8,7 +8,7 @@ package display.video {
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public class NetstreamVideo extends Sprite 
+	public class NetStreamVideo extends Sprite 
 	{
 		
 		
@@ -28,13 +28,13 @@ package display.video {
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: instantiation
 		
-			public function NetstreamVideo(width:int = 320, height:int = 240, connection:NetConnection = null) 
+			public function NetStreamVideo(width:int = 320, height:int = 240, connection:NetConnection = null) 
 			{
 				super();
 				build(width, height);
 				if (connection)
 				{
-					connect(connection);
+					this.connection = connection;
 				};
 			}
 		
@@ -60,6 +60,24 @@ package display.video {
 		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: accessors
+		
+			public function set connection(connection:NetConnection):void 
+			{
+				if (_connection)
+				{
+					
+				}
+				
+				if(connection == null)
+				{
+					
+				}
+				else
+				{
+					_connection = connection;
+				}
+			}
+			
 		
 			override public function set width(value:Number):void 
 			{

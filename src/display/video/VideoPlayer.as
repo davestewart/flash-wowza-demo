@@ -1,13 +1,13 @@
 package display.video {
 
-	import display.video.NetstreamVideo;
+	import display.video.NetStreamVideo;
 	import flash.net.NetConnection;
 	
 	/**
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public class VideoPlayer extends NetstreamVideo 
+	public class VideoPlayer extends NetStreamVideo 
 	{
 		
 		
