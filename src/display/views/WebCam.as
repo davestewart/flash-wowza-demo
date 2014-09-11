@@ -40,9 +40,7 @@ package display.views {
 				protected var microphone				:Microphone;
 				
 				protected var serverName				:String;
-				protected var streamName					:String;
-				
-				protected var flushVideoBufferTimer		:Number;
+				protected var streamName				:String;
 				
 				protected var sizes						:Array;
 				protected var size						:Array;
@@ -55,13 +53,11 @@ package display.views {
 			{
 				// setup
 					setupServer();
-					setupSettings();
 					setupUI();
-					
-				// set up camera
 					setupCamera();
-					updateCamera();
-					onConnectClick(null);
+					
+				// connect
+					connect();
 			}
 			
 		// ----------------------------------------------------------------------------------------------------------
@@ -84,7 +80,7 @@ package display.views {
 					streamName						= "recording1";
 			}
 
-			protected function setupSettings():void 
+			protected function setupUI():void 
 			{
 				// text fields
 					tfStream.text				= streamName;
@@ -110,10 +106,7 @@ package display.views {
 					
 				// quality
 					stpQuality.addEventListener(Event.CHANGE, onQualityChange);
-			}
-			
-			protected function setupUI():void 
-			{
+					
 				// text fields
 					tfServer.addEventListener(Event.CHANGE, onServerNameChange);
 					tfStream.addEventListener(Event.CHANGE, onStreamNameChange);
@@ -185,9 +178,7 @@ package display.views {
 				// here are all the quality and performance settings
 					if(camera != null)
 					{
-						camera.setMode(640, 360, 25, true);
-						camera.setQuality(0, 88);
-						camera.setKeyFrameInterval(15);
+						updateCamera();
 					}
 					else
 					{
@@ -222,12 +213,16 @@ package display.views {
 						
 					// set camera properties
 						camera.setMode(width, height, fps, true);
-						//camera.setQuality(90000, 90); // new
 						
+					// keyframes
+						camera.setKeyFrameInterval(15);
+						
+					// quality
 						// @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Camera.html#setQuality()
+						//camera.setQuality(90000, 90); // new
 						camera.setQuality(rate, quality); // new
 						camera.setQuality(0, quality); // new
-						camera.setKeyFrameInterval(15);
+						
 						
 					// debug
 						trace(width, height, rate)
@@ -264,9 +259,10 @@ package display.views {
 					connection.addEventListener(NetStatusEvent.NET_STATUS, onConnectionStatus);
 					connection.connect(serverName);
 							
+				// ui
 					btnConnect.label = "Disconnect";
 				
-				// uncomment this to monitor frame rate and buffer length
+				// monitor frame rate and buffer length
 					setInterval(onStreamInterval, 500);
 				
 				// clear camera
@@ -289,7 +285,7 @@ package display.views {
 					
 				// connection close
 					connection.close();
-					connection						= null;
+					connection					= null;
 					
 				// controls
 					enablePlayControls(false);
@@ -405,68 +401,76 @@ package display.views {
 
 			protected function stopRecording():void
 			{
-				// stop streaming video and audio to the publishing
-				// NetStream object
-				//nsPublish.attachAudio(null); // disabled audio so that mp4 will record
-					nsPublish.attachCamera(null);
-
-				// After stopping the publishing we need to check if there is
-				// video content in the NetStream buffer. If there is data
-				// we are going to monitor the video upload progress by calling
-				// flushVideoBuffer every 250ms.  If the buffer length is 0
-				// we close the recording immediately.
-					var buffLen:Number = nsPublish.bufferLength;
-					if (buffLen > 0)
+				// variables
+					var intervalId:Number;
+				
+				// this function gets called every 250 ms to monitor the progress of flushing the video buffer.
+				// Once the video buffer is empty we close publishing stream
+					function onCheckBufferInterval():void
 					{
-						flushVideoBufferTimer = setInterval(tryFlushVideoBuffer, 250);
-						btnPublish.label = 'Wait...';
+						trace('VideoRecorder: Waiting for buffer to empty');
+						if (nsPublish.bufferLength == 0)
+						{
+							trace('VideoRecorder: Buffer is empty!');
+							clearInterval(intervalId);
+							finishRecording();
+						}
 					}
+
+				// stop streaming video and audio to the publishing NetStream object
+					nsPublish.attachCamera(null);
+					
+				// disabled audio so that mp4 will record
+					nsPublish.attachAudio(null); 
+
+				// After stopping the publishing we need to check if there is video content in the NetStream buffer. 
+				// If there is data we are going to monitor the video upload progress by calling flushVideoBuffer every 250ms.
+					if (nsPublish.bufferLength > 0)
+					{
+						// update UI
+							btnPublish.label	= 'Wait...';
+							
+						// monitor buffer length
+							intervalId		= setInterval(onCheckBufferInterval, 250);
+					}
+					
+				// If the buffer length is 0  we close the recording immediately.
 					else
 					{
-						trace("nsPublish.publish(null)");
-						finishRecording();		
-						btnPublish.label = 'Record';
+						// debug
+							trace("nsPublish.publish(null)");
+							
+						// finish
+							finishRecording();		
 					}
 			}
 			
 			protected function finishRecording():void
 			{
-				// after we have hit "Stop" recording and after the buffered video data has been
-				// sent to the Wowza Media Server close the publishing stream
-					nsPublish.publish("null");
+				// debug
 					trace('> finished recording')
-					//nsPublish.close();
-			}
-
-			// this function gets called every 250 ms to monitor the
-			// progress of flushing the video buffer. Once the video
-			// buffer is empty we close publishing stream
-			protected function tryFlushVideoBuffer():void
-			{
-				var buffLen:Number = nsPublish.bufferLength;
-				trace('nsPublish: Waiting to clear buffer...');
-				if (buffLen == 0)
-				{
-					clearInterval(flushVideoBufferTimer);
-					flushVideoBufferTimer = 0;
-					finishRecording();
+					
+				// after we have hit "Stop" recording, and after the buffered video data has been
+				// sent to the Wowza Media Server, close the publishing stream
+					nsPublish.publish("null");
+					nsPublish.close();
+					
+				// update UI
 					btnPublish.label = 'Record';
-					trace('nsPublish: Buffer cleared...');
-				}
 			}
 
 			protected function onStreamPublishStatus(event:NetStatusEvent):void
 			{
-				trace("nsPublish: "+event.info.code+" ("+event.info.description+")");
+				// debug
+					trace("nsPublish: "+event.info.code+" ("+event.info.description+")");
 				
-				// After calling nsPublish.publish(false); we wait for a status
-				// event of "NetStream.Unpublish.Success" which tells us all the video
-				// and audio data has been written to the flv file. It is at this time
-				// that we can start playing the video we just recorded.
+				// After calling nsPublish.publish(false); we wait for a status event of "NetStream.Unpublish.Success" 
+				// which tells us all the video and audio data has been written to the flv file. 
+				// It is at this time  that we can start playing the video we just recorded.
 					if (event.info.code == "NetStream.Unpublish.Success")
 					{	
 						trace('> unpublished')
-						nsPublish.close();
+						//nsPublish.close();
 						trace('> closed')
 						//startPlaying();
 					}
