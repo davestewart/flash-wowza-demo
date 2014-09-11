@@ -6,6 +6,7 @@
 		
 		Connection
 		
+		
 		Settings
 			
 		
@@ -15,6 +16,7 @@
 		
 		VideoRecorder
 			server settings
+			Camera
 			NetStreamPlayer
 			additional recording functionality
 			Button - record

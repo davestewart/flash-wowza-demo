@@ -1,23 +1,25 @@
-package display.views {
-	import assets.SettingsAsset;
-	import flash.events.Event;
-	import flash.events.TextEvent;
+package display.views 
+{
 	
-	import fl.controls.Button;
-	import fl.controls.CheckBox;
-	import fl.controls.TextInput;
-	import flash.display.Sprite;
+	import assets.SettingsAsset;
+	
+	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.events.NetStatusEvent;
-	import flash.media.*;
-	import flash.geom.*;
-	import flash.net.*;
-	import flash.system.Capabilities;
-	import flash.text.TextField;
+	
+	import flash.media.Camera;
+	import flash.media.H264Level;
+	import flash.media.H264Profile;
+	import flash.media.H264VideoStreamSettings;
+	import flash.media.Microphone;
+	import flash.media.Video;
+	
+	import flash.net.NetConnection;
+	import flash.net.NetStream;
+	
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
-
-	import flash.media.H264VideoStreamSettings;
+	
 
 	/**
 	 * ...
@@ -167,7 +169,7 @@ package display.views {
 			}
 			
 
-			// ----------------------------------------------------------------------------------------------------------
+		// ----------------------------------------------------------------------------------------------------------
 		// { region : Camera
 			
 			protected function setupCamera():void
@@ -297,22 +299,6 @@ package display.views {
 					tfPrompt.text				= "";
 			}
 			
-			// function to monitor the frame rate and buffer length
-			protected function onStreamInterval():void
-			{
-				if (nsPlay != null)
-				{
-					tfFps.text = (Math.round(nsPlay.currentFPS*1000)/1000)+" fps";
-					tfBufferLength.text = (Math.round(nsPlay.bufferLength*1000)/1000)+" secs";
-				}
-				else
-				{
-					tfFps.text = "";
-					tfBufferLength.text = "";
-				}
-			}
-
-			
 			protected function onConnectionStatus(event:NetStatusEvent):void
 			{
 				var code:String = event.info.code;
@@ -334,6 +320,22 @@ package display.views {
 					break;
 				}				
 			}
+			
+			// function to monitor the frame rate and buffer length
+			protected function onStreamInterval():void
+			{
+				if (nsPlay != null)
+				{
+					tfFps.text = (Math.round(nsPlay.currentFPS*1000)/1000)+" fps";
+					tfBufferLength.text = (Math.round(nsPlay.bufferLength*1000)/1000)+" secs";
+				}
+				else
+				{
+					tfFps.text = "";
+					tfBufferLength.text = "";
+				}
+			}
+
 			
 
 		// ----------------------------------------------------------------------------------------------------------

@@ -1,15 +1,33 @@
 package  
 {
 	import display.video.NetStreamVideo;
+	import flash.display.DisplayObjectContainer;
+	
+	
 	import display.video.VideoPlayer;
 	import display.video.VideoRecorder;
 	import display.views.SettingsView;
 	import display.views.WebCam;
-	import flash.display.DisplayObjectContainer;
+	
+	import assets.SettingsAsset;
+	
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.events.NetStatusEvent;
+	
 	import flash.media.Camera;
+	import flash.media.H264Level;
+	import flash.media.H264Profile;
 	import flash.media.H264VideoStreamSettings;
 	import flash.media.Microphone;
+	import flash.media.Video;
+	
 	import flash.net.NetConnection;
+	import flash.net.NetStream;
+	
+	import flash.utils.clearInterval;
+	import flash.utils.setInterval;
+
 	/**
 	 * ...
 	 * @author Dave Stewart

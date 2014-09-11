@@ -1,5 +1,26 @@
-package display.views {
+package display.views
+{
 	import assets.SettingsAsset;
+	
+	import assets.SettingsAsset;
+	
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.events.NetStatusEvent;
+	
+	import flash.media.Camera;
+	import flash.media.H264Level;
+	import flash.media.H264Profile;
+	import flash.media.H264VideoStreamSettings;
+	import flash.media.Microphone;
+	import flash.media.Video;
+	
+	import flash.net.NetConnection;
+	import flash.net.NetStream;
+	
+	import flash.utils.clearInterval;
+	import flash.utils.setInterval;
+
 	
 	/**
 	 * ...
