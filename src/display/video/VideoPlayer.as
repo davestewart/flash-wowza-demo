@@ -4,7 +4,8 @@ package display.video {
 	import flash.net.NetConnection;
 	
 	/**
-	 * ...
+	 * Instantiates a basic NetStreamVideo, then manages playback
+	 * 
 	 * @author Dave Stewart
 	 */
 	public class VideoPlayer extends NetStreamVideo 
@@ -26,7 +27,7 @@ package display.video {
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: instantiation
 		
-			public function VideoPlayer(width:int=320, height:int=240, connection:NetConnection=null) 
+			public function VideoPlayer(width:int = 320, height:int = 240, connection:NetConnection = null)
 			{
 				super(width, height, connection);
 			

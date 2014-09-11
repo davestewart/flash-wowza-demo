@@ -22,26 +22,18 @@ package
 		// { region: variables
 		
 			// elements
-				protected var stage			:DisplayObjectContainer;
-				protected var settings		:SettingsView;
-				protected var player		:NetStreamVideo;
-				protected var recorder		:NetStreamVideo;
+				protected var stage				:DisplayObjectContainer;
+				protected var settings			:SettingsView;
+				protected var player			:NetStreamVideo;
+				protected var recorder			:NetStreamVideo;
 				
 			
-			// properties
-				protected var connection				:NetConnection					= null;
-				
-				protected var camera					:Camera							= null;
-				protected var microphone				:Microphone						= null;
-				
-				protected var serverName				:String							= "rtmp://localhost/webcamrecording";
-				protected var movieName					:String							= "recording1";
-				
-				protected var flushVideoBufferTimer		:Number							= 0;
-				protected var h264Settings				:H264VideoStreamSettings		= new H264VideoStreamSettings();
-				
-				protected var sizes						:Array;
-				protected var size						:Array;
+			// connection
+				protected var connection		:NetConnection;
+				 
+			// server credentials
+				protected var serverName		:String;
+				protected var streamName		:String;
 				
 			// variables
 				

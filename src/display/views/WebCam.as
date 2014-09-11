@@ -1,6 +1,7 @@
 package display.views {
 	import assets.SettingsAsset;
 	import flash.events.Event;
+	import flash.events.TextEvent;
 	
 	import fl.controls.Button;
 	import fl.controls.CheckBox;
@@ -39,7 +40,7 @@ package display.views {
 				protected var microphone				:Microphone;
 				
 				protected var serverName				:String;
-				protected var movieName					:String;
+				protected var streamName					:String;
 				
 				protected var flushVideoBufferTimer		:Number;
 				
@@ -80,14 +81,14 @@ package display.views {
 					*/
 					
 					serverName						= "rtmp://localhost/webcamrecording";
-					movieName						= "recording1";
+					streamName						= "recording1";
 			}
 
 			protected function setupSettings():void 
 			{
 				// text fields
-					tfName.text				= movieName;
-					tfServer.text			= serverName;
+					tfStream.text				= streamName;
+					tfServer.text				= serverName;
 
 				// sizes
 					sizes = 
@@ -113,19 +114,33 @@ package display.views {
 			
 			protected function setupUI():void 
 			{
-				// prepare video
-					flipVideo(videoCamera);
-					flipVideo(videoRemote);
-					
+				// text fields
+					tfServer.addEventListener(Event.CHANGE, onServerNameChange);
+					tfStream.addEventListener(Event.CHANGE, onStreamNameChange);
+				
 				// event handlers
 					btnPublish.addEventListener(MouseEvent.CLICK, onRecordClick);
 					btnSubscribe.addEventListener(MouseEvent.CLICK, onPlayClick);
 					btnConnect.addEventListener(MouseEvent.CLICK, onConnectClick);
 					
+				// prepare video
+					flipVideo(videoCamera);
+					flipVideo(videoRemote);
+					
 				// disable play controls
 					enablePlayControls(false);
 			}
 			
+			private function onServerNameChange(event:Event):void 
+			{
+				serverName = tfServer.text;
+			}
+
+			private function onStreamNameChange(event:Event):void 
+			{
+				streamName = tfStream.text;
+			}
+
 			private function onSizeSelect(event:Event):void 
 			{
 				size = sizes[comboSizes.selectedIndex];
@@ -136,23 +151,26 @@ package display.views {
 			{
 				updateCamera();
 			}
-
+			
 			
 		// ----------------------------------------------------------------------------------------------------------
 		// { region : Video
 		
 			protected function enablePlayControls(isEnable:Boolean):void
 			{
-				btnPublish.enabled = isEnable;
-				btnSubscribe.enabled = isEnable;
-				tfName.enabled = isEnable;
-				cbAppend.enabled = isEnable;
+				btnPublish.enabled		= isEnable;
+				btnSubscribe.enabled	= isEnable;
+				tfStream.enabled		= isEnable;
+				cbAppend.enabled		= isEnable;
 			}
 			
 			protected function flipVideo(video:Video):void
 			{
-				video.scaleX = -video.scaleX;
-				video.x += video.width;
+				if (video.scaleX > 0)
+				{
+					video.scaleX	= -video.scaleX;
+					video.x			+= video.width;
+				}
 			}
 			
 
@@ -162,7 +180,7 @@ package display.views {
 			protected function setupCamera():void
 			{	
 				// get the default Flash camera and microphone
-					camera			= Camera.getCamera();
+					camera = Camera.getCamera();
 
 				// here are all the quality and performance settings
 					if(camera != null)
@@ -173,6 +191,7 @@ package display.views {
 					}
 					else
 					{
+						trace('Could not get camera');
 						sourceVideoLabel.text = "No Camera Found\n";
 					}
 					
@@ -194,25 +213,29 @@ package display.views {
 			{
 				if (camera)
 				{
-					var width	:int	= size[0];
-					var height	:int	= size[1];
-					var rate	:int	= width * height;
-					var quality	:int	= stpQuality.value;
-					var fps		:int	= 25;
+					// variables
+						var width	:int	= size[0];
+						var height	:int	= size[1];
+						var rate	:int	= width * height;
+						var quality	:int	= stpQuality.value;
+						var fps		:int	= 25;
+						
+					// set camera properties
+						camera.setMode(width, height, fps, true);
+						//camera.setQuality(90000, 90); // new
+						
+						// @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Camera.html#setQuality()
+						camera.setQuality(rate, quality); // new
+						camera.setQuality(0, quality); // new
+						camera.setKeyFrameInterval(15);
+						
+					// debug
+						trace(width, height, rate)
+						trace('rate:' + rate)
 					
-					camera.setMode(width, height, fps, true);
-					//camera.setQuality(90000, 90); // new
-					
-					// @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Camera.html#setQuality()
-					camera.setQuality(rate, quality); // new
-					camera.setQuality(0, quality); // new
-					camera.setKeyFrameInterval(15);
-					
-					tfName.text = 'recording ' + width + 'x' + height + ' at ' + quality;
-					
-					trace(width, height, rate)
-					trace('rate:' + rate)
-					
+					// update stream name
+						tfStream.text = 'recording ' + width + 'x' + height + ' at ' + quality;
+						onStreamNameChange(null);
 				}
 			}
 				
@@ -239,12 +262,12 @@ package display.views {
 				// create a connection to the wowza media server
 					connection = new NetConnection();
 					connection.addEventListener(NetStatusEvent.NET_STATUS, onConnectionStatus);
-					connection.connect(tfServer.text);
+					connection.connect(serverName);
 							
 					btnConnect.label = "Disconnect";
 				
 				// uncomment this to monitor frame rate and buffer length
-					setInterval(updateStreamValues, 500);
+					setInterval(onStreamInterval, 500);
 				
 				// clear camera
 					videoCamera.clear();
@@ -268,20 +291,18 @@ package display.views {
 					connection.close();
 					connection						= null;
 					
-				// ui
+				// controls
 					enablePlayControls(false);
 
+				// ui
 					btnSubscribe.label			= 'Play';
 					btnPublish.label			= 'Record';
-					cbAppend.selected			= false;
-						
 					btnConnect.label			= "Connect";
 					tfPrompt.text				= "";
-			
 			}
 			
 			// function to monitor the frame rate and buffer length
-			protected function updateStreamValues():void
+			protected function onStreamInterval():void
 			{
 				if (nsPlay != null)
 				{
@@ -358,11 +379,11 @@ package display.views {
 				
 				// publish the stream by name
 					var mode:String = cbAppend.selected ? "append" : "record";
-					nsPublish.publish(tfName.text + '.f4v', mode);
+					nsPublish.publish(streamName + '.f4v', mode);
 				
 				// do the live streaming
-				//nsPublish.publish('mp4:' + tfName.text, 'live');
-					nsPublish.publish('mp4:' + tfName.text, mode);
+				//nsPublish.publish('mp4:' + streamName, 'live');
+					nsPublish.publish('mp4:' + streamName, mode);
 				
 				//nsPublish.publish("mp4:webCamX.f4v", "live");
 				
@@ -413,6 +434,8 @@ package display.views {
 				// after we have hit "Stop" recording and after the buffered video data has been
 				// sent to the Wowza Media Server close the publishing stream
 					nsPublish.publish("null");
+					trace('> finished recording')
+					//nsPublish.close();
 			}
 
 			// this function gets called every 250 ms to monitor the
@@ -421,12 +444,14 @@ package display.views {
 			protected function tryFlushVideoBuffer():void
 			{
 				var buffLen:Number = nsPublish.bufferLength;
+				trace('nsPublish: Waiting to clear buffer...');
 				if (buffLen == 0)
 				{
 					clearInterval(flushVideoBufferTimer);
 					flushVideoBufferTimer = 0;
 					finishRecording();
 					btnPublish.label = 'Record';
+					trace('nsPublish: Buffer cleared...');
 				}
 			}
 
@@ -439,12 +464,17 @@ package display.views {
 				// and audio data has been written to the flv file. It is at this time
 				// that we can start playing the video we just recorded.
 					if (event.info.code == "NetStream.Unpublish.Success")
-					{
-						startPlaying();
+					{	
+						trace('> unpublished')
+						nsPublish.close();
+						trace('> closed')
+						//startPlaying();
 					}
 
 					if (event.info.code == "NetStream.Play.StreamNotFound" || event.info.code == "NetStream.Play.Failed")
+					{
 						tfPrompt.text = event.info.description;
+					}
 			}
 
 
@@ -500,7 +530,7 @@ package display.views {
 					videoRemote.attachNetStream(nsPlay);
 				
 				// play the movie you just recorded
-					nsPlay.play(tfName.text);
+					nsPlay.play(streamName);
 				
 					btnSubscribe.label = 'Stop';
 			}
@@ -522,7 +552,9 @@ package display.views {
 			{
 				trace("nsPlay: onStatus: "+event.info.code+" ("+event.info.description+")");
 				if (event.info.code == "NetStream.Play.StreamNotFound" || event.info.code == "NetStream.Play.Failed")
+				{
 					tfPrompt.text = event.info.description;
+				}
 			}
 			
 			

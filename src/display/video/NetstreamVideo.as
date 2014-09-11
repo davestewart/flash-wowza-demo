@@ -48,14 +48,15 @@ package display.video {
 				video = new Video(width, height);
 			}
 			
+			protected function reset():void 
+			{
+				
+			}
+			
 		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: public methods
 		
-			public function connect(connection:NetConnection):void 
-			{
-				_connection = connection;
-			}
 			
 		
 		// ---------------------------------------------------------------------------------------------------------------------
