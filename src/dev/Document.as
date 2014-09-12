@@ -1,4 +1,4 @@
-package 
+package dev
 {
 	import dev.WebCam;
 	import flash.display.Sprite;
@@ -8,10 +8,10 @@ package
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public class Main extends Sprite 
+	public class Document extends Sprite 
 	{
 		
-		public function Main():void 
+		public function Document():void 
 		{
 			if (stage) init();
 			else addEventListener(Event.ADDED_TO_STAGE, init);
@@ -25,7 +25,8 @@ package
 			stage.align				= "TL";
 			stage.scaleMode			= "noScale";
 			
-			new App(this);
+			var webcam:WebCam = new WebCam();
+			addChild(webcam);
 		}
 		
 	}

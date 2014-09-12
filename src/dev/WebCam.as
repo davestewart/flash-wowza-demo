@@ -1,8 +1,7 @@
-package display.views 
-{
+package dev {
 	
 	import assets.SettingsAsset;
-	
+
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.events.NetStatusEvent;
@@ -20,6 +19,8 @@ package display.views
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
 	
+	
+
 
 	/**
 	 * ...
@@ -114,8 +115,8 @@ package display.views
 					tfStream.addEventListener(Event.CHANGE, onStreamNameChange);
 				
 				// event handlers
-					btnPublish.addEventListener(MouseEvent.CLICK, onRecordClick);
-					btnSubscribe.addEventListener(MouseEvent.CLICK, onPlayClick);
+					btnRecord.addEventListener(MouseEvent.CLICK, onRecordClick);
+					btnPlay.addEventListener(MouseEvent.CLICK, onPlayClick);
 					btnConnect.addEventListener(MouseEvent.CLICK, onConnectClick);
 					
 				// prepare video
@@ -153,8 +154,8 @@ package display.views
 		
 			protected function enablePlayControls(isEnable:Boolean):void
 			{
-				btnPublish.enabled		= isEnable;
-				btnSubscribe.enabled	= isEnable;
+				btnRecord.enabled		= isEnable;
+				btnPlay.enabled	= isEnable;
 				tfStream.enabled		= isEnable;
 				cbAppend.enabled		= isEnable;
 			}
@@ -169,7 +170,7 @@ package display.views
 			}
 			
 
-		// ----------------------------------------------------------------------------------------------------------
+			// ----------------------------------------------------------------------------------------------------------
 		// { region : Camera
 			
 			protected function setupCamera():void
@@ -275,6 +276,11 @@ package display.views
 			
 			protected function disconnect():void 
 			{
+				connection.close();
+			}
+			
+			protected function cleanup():void 
+			{
 				// camera record
 					nsPublish					= null;
 					videoCamera.attachNetStream(null);
@@ -286,15 +292,14 @@ package display.views
 					videoRemote.clear();
 					
 				// connection close
-					connection.close();
 					connection					= null;
 					
 				// controls
 					enablePlayControls(false);
 
 				// ui
-					btnSubscribe.label			= 'Play';
-					btnPublish.label			= 'Record';
+					btnPlay.label			= 'Play';
+					btnRecord.label			= 'Record';
 					btnConnect.label			= "Connect";
 					tfPrompt.text				= "";
 			}
@@ -317,6 +322,10 @@ package display.views
 					
 					case 'NetConnection.Connect.Rejected':
 						tfPrompt.text = event.info.description;
+					break;
+					
+					case 'NetConnection.Connect.Closed':
+						cleanup();
 					break;
 				}				
 			}
@@ -343,7 +352,7 @@ package display.views
 
 			protected function onRecordClick(event:MouseEvent = null):void
 			{
-				if (btnPublish.label == 'Record')
+				if (btnRecord.label == 'Record')
 					startRecording();
 				else
 					stopRecording();
@@ -398,7 +407,7 @@ package display.views
 				// data for better performance and higher quality video
 					nsPublish.bufferTime = 20;
 
-					btnPublish.label = 'Stop';
+					btnRecord.label = 'Stop';
 			}
 
 			protected function stopRecording():void
@@ -430,7 +439,7 @@ package display.views
 					if (nsPublish.bufferLength > 0)
 					{
 						// update UI
-							btnPublish.label	= 'Wait...';
+							btnRecord.label	= 'Wait...';
 							
 						// monitor buffer length
 							intervalId		= setInterval(onCheckBufferInterval, 250);
@@ -458,7 +467,7 @@ package display.views
 					nsPublish.close();
 					
 				// update UI
-					btnPublish.label = 'Record';
+					btnRecord.label = 'Record';
 			}
 
 			protected function onStreamPublishStatus(event:NetStatusEvent):void
@@ -490,7 +499,7 @@ package display.views
 		
 			protected function onPlayClick(event:MouseEvent):void
 			{
-				if (btnSubscribe.label == 'Play')
+				if (btnPlay.label == 'Play')
 					startPlaying();
 				else
 					stopPlaying();
@@ -538,7 +547,7 @@ package display.views
 				// play the movie you just recorded
 					nsPlay.play(streamName);
 				
-					btnSubscribe.label = 'Stop';
+					btnPlay.label = 'Stop';
 			}
 
 			protected function stopPlaying():void
@@ -551,7 +560,7 @@ package display.views
 						nsPlay.close();
 					nsPlay = null;
 					
-					btnSubscribe.label = 'Play';
+					btnPlay.label = 'Play';
 			}
 
 			protected function onStreamPlayStatus(event:NetStatusEvent):void

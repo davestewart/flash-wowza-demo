@@ -60,8 +60,64 @@ package display.video {
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: public methods
 		
+			protected function startPlaying():void
+			{
+				trace("doPlayStart");
+				
+				// each time we play a video create a new NetStream object
+					nsPlay = new NetStream(connection);
+					nsPlay.addEventListener(NetStatusEvent.NET_STATUS, onStreamPlayStatus);
+					
+					var nsPlayClient:Object = new Object();
+					nsPlay.client = nsPlayClient;
+
+				// trace the NetStream play status information
+					nsPlayClient.onPlayStatus = function(infoObject:Object):void
+					{
+						trace("nsPlay: onPlayStatus: "+infoObject.code+" ("+infoObject.description+")");
+						if (infoObject.code == "NetStream.Play.Complete")
+						{
+							stopPlaying();
+						}
+					}
+
+					nsPlayClient.onMetaData = function(infoObject:Object) :void
+					{
+						trace("onMetaData");
+						
+						// print debug information about the metaData
+						for (var propName:String in infoObject)
+						{
+							trace("  "+propName + " = " + infoObject[propName]);
+						}
+					};		
+
+				// set the buffer time to 2 seconds
+					nsPlay.bufferTime = 2;
+
+				// attach the NetStream object to the right most video object
+					videoRemote.attachNetStream(nsPlay);
+				
+				// play the movie you just recorded
+					nsPlay.play(settings.streamName);
+				
+					btnSubscribe.label = 'Stop';
+			}
+
+			protected function stopPlaying():void
+			{
+				// when you hit stop disconnect from the NetStream object and clear the video player
+					videoRemote.attachNetStream(null);
+					videoRemote.clear();
+					
+					if (nsPlay != null)
+						nsPlay.close();
+					nsPlay = null;
+					
+					btnSubscribe.label = 'Play';
+			}
 			
-		
+			
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: accessors
 		
@@ -75,6 +131,16 @@ package display.video {
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: handlers
 		
+
+			protected function onStreamPlayStatus(event:NetStatusEvent):void
+			{
+				trace("nsPlay: onStatus: "+event.info.code+" ("+event.info.description+")");
+				if (event.info.code == "NetStream.Play.StreamNotFound" || event.info.code == "NetStream.Play.Failed")
+				{
+					tfPrompt.text = event.info.description;
+				}
+			}
+					
 			
 		
 		// ---------------------------------------------------------------------------------------------------------------------

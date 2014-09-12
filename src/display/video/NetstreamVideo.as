@@ -114,7 +114,14 @@ package display.video
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: protected methods
 		
-			
+			protected function flipVideo():void
+			{
+				if (video.scaleX > 0)
+				{
+					video.scaleX	= -video.scaleX;
+					video.x			+= video.width;
+				}
+			}
 		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: handlers
