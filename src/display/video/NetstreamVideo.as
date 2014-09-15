@@ -4,8 +4,7 @@ package display.video
 	import flash.media.Video;
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
-	
-	import assets.SettingsAsset;
+	import flash.text.TextField;
 	
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -38,6 +37,7 @@ package display.video
 		
 			// elements
 				protected var video						:Video;
+				protected var tf						:TextField;
 				
 			// properties
 				protected var _connection				:NetConnection;             
@@ -57,18 +57,20 @@ package display.video
 				{
 					this.connection = connection;
 				};
+				initialize();
 			}
 		
+			protected function build(width:int = 320, height:int = 240):void 
+			{
+				video	= new Video(width, height);
+				//tf		= new TextField();
+			}
+			
 			protected function initialize():void 
 			{
 				
 			}
 		
-			protected function build(width:int = 320, height:int = 240):void 
-			{
-				video = new Video(width, height);
-			}
-			
 			protected function reset():void 
 			{
 				
@@ -87,7 +89,7 @@ package display.video
 			{
 				if (_connection)
 				{
-					
+					_connection.close();
 				}
 				
 				if(connection == null)
@@ -100,6 +102,10 @@ package display.video
 				}
 			}
 			
+			protected function get stream():NetStream
+			{
+				return _stream;
+			}
 		
 			override public function set width(value:Number):void 
 			{

@@ -2,8 +2,6 @@ package display.video
 {
 	import flash.net.NetConnection;
 	
-	import assets.SettingsAsset;
-	
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.events.NetStatusEvent;
@@ -42,6 +40,7 @@ package display.video
 				protected var microphone				:Microphone;
 				
 			// variables
+				protected var size						:Array;
 				
 			
 		// ---------------------------------------------------------------------------------------------------------------------
@@ -50,11 +49,10 @@ package display.video
 			public function VideoRecorder(width:int = 320, height:int = 240, connection:NetConnection = null)
 			{
 				super(width, height, connection);
-			
-				initialize();
+				size = [width, height];
 			}
 		
-			protected function initialize():void 
+			override protected function initialize():void 
 			{
 				
 			}
@@ -72,7 +70,7 @@ package display.video
 					else
 					{
 						trace('Could not get camera');
-						sourceVideoLabel.text = "No Camera Found\n";
+						//sourceVideoLabel.text = "No Camera Found\n";
 					}
 					
 					
@@ -85,7 +83,8 @@ package display.video
 					}
 					else
 					{
-						sourceVideoLabel.text += "No Microphone Found\n";
+						trace('Could not get microphone');
+						//sourceVideoLabel.text += "No Microphone Found\n";
 					}
 			}
 
@@ -101,7 +100,7 @@ package display.video
 						var fps		:int	= 25;
 						
 					// set camera properties
-						camera.setMode(width, height, fps, true);
+						camera.setMode(width, height, fps);
 						
 					// keyframes
 						camera.setKeyFrameInterval(15);
@@ -112,14 +111,9 @@ package display.video
 						camera.setQuality(rate, quality); // new
 						camera.setQuality(0, quality); // new
 						
-						
 					// debug
 						trace(width, height, rate)
 						trace('rate:' + rate)
-					
-					// update stream name
-						tfStream.text = 'recording ' + width + 'x' + height + ' at ' + quality;
-						onStreamNameChange(null);
 				}
 			}
 				
@@ -136,46 +130,46 @@ package display.video
 					stopPlaying();
 				
 				// create a new NetStream object for publishing
-					nsPublish = new NetStream(connection);
+					stream = new NetStream(connection);
 				
 				// add h264 settings
 					var h264Settings:H264VideoStreamSettings = new H264VideoStreamSettings();
 					h264Settings.setProfileLevel(H264Profile.BASELINE, H264Level.LEVEL_3_1);
-					nsPublish.videoStreamSettings = h264Settings;
+					stream.videoStreamSettings = h264Settings;
 
 				// update camera settings
 					var index		:int		= comboSizes.selectedIndex;
 					var size		:Array		= sizes[index];
 					camera.setMode(size[0], size[1], 25, true);
 
-					var nsPublishClient:Object = new Object();
-					nsPublish.client = nsPublishClient;
+					var streamClient:Object = new Object();
+					stream.client = streamClient;
 
 				// trace the NetStream status information
-					nsPublish.addEventListener(NetStatusEvent.NET_STATUS, onStreamPublishStatus);
+					stream.addEventListener(NetStatusEvent.NET_STATUS, onStreamPublishStatus);
 				
 				// publish the stream by name
 					var mode:String = cbAppend.selected ? "append" : "record";
-					nsPublish.publish(settings.streamName + '.f4v', mode);
+					stream.publish(settings.streamName + '.f4v', mode);
 				
 				// do the live streaming
-				//nsPublish.publish('mp4:' + settings.streamName, 'live');
-					nsPublish.publish('mp4:' + settings.streamName, mode);
+				//stream.publish('mp4:' + settings.streamName, 'live');
+					stream.publish('mp4:' + settings.streamName, mode);
 				
-				//nsPublish.publish("mp4:webCamX.f4v", "live");
+				//stream.publish("mp4:webCamX.f4v", "live");
 				
 				// add custom metadata to the header of the .flv file
 					var metaData:Object = new Object();
 					metaData["description"] = "Recorded using WebcamRecording example."
-					nsPublish.send("@setDataFrame", "onMetaData", metaData);
+					stream.send("@setDataFrame", "onMetaData", metaData);
 
 				// attach the camera and microphone to the server
-					nsPublish.attachCamera(camera);
-					nsPublish.attachAudio(microphone);
+					stream.attachCamera(camera);
+					stream.attachAudio(microphone);
 				
 				// set the buffer time to 20 seconds to buffer 20 seconds of video
 				// data for better performance and higher quality video
-					nsPublish.bufferTime = 20;
+					stream.bufferTime = 20;
 
 					btnPublish.label = 'Stop';
 			}
@@ -190,7 +184,7 @@ package display.video
 					function onCheckBufferInterval():void
 					{
 						trace('VideoRecorder: Waiting for buffer to empty');
-						if (nsPublish.bufferLength == 0)
+						if (stream.bufferLength == 0)
 						{
 							trace('VideoRecorder: Buffer is empty!');
 							clearInterval(intervalId);
@@ -199,14 +193,14 @@ package display.video
 					}
 
 				// stop streaming video and audio to the publishing NetStream object
-					nsPublish.attachCamera(null);
+					stream.attachCamera(null);
 					
 				// disabled audio so that mp4 will record
-					nsPublish.attachAudio(null); 
+					stream.attachAudio(null); 
 
 				// After stopping the publishing we need to check if there is video content in the NetStream buffer. 
 				// If there is data we are going to monitor the video upload progress by calling flushVideoBuffer every 250ms.
-					if (nsPublish.bufferLength > 0)
+					if (stream.bufferLength > 0)
 					{
 						// update UI
 							btnPublish.label	= 'Wait...';
@@ -219,7 +213,7 @@ package display.video
 					else
 					{
 						// debug
-							trace("nsPublish.publish(null)");
+							trace("stream.publish(null)");
 							
 						// finish
 							finishRecording();		
@@ -230,18 +224,14 @@ package display.video
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: accessors
 		
-			
+			public function set mode(width:int, height:int, fps:int = 25):void 
+			{
+				camera.setMode(width, height, fps);
+			}
 		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: protected methods
 		
-			
-		
-		// ---------------------------------------------------------------------------------------------------------------------
-		// { region: handlers
-		
-
-			
 			protected function finishRecording():void
 			{
 				// debug
@@ -249,25 +239,36 @@ package display.video
 					
 				// after we have hit "Stop" recording, and after the buffered video data has been
 				// sent to the Wowza Media Server, close the publishing stream
-					nsPublish.publish("null");
-					nsPublish.close();
+					stream.publish("null");
+					stream.close();
+					
+				// event
+					// @see http://help.adobe.com/en_US/as3/dev/WS901d38e593cd1bac-3d11a09612fffaf8447-8000.html
+					dispatchEvent(new NetStatusEvent('NetStream.Buffer.Empty'));
 					
 				// update UI
 					btnPublish.label = 'Record';
 			}
 
+			
+		
+		// ---------------------------------------------------------------------------------------------------------------------
+		// { region: handlers
+		
+
+			
 			protected function onStreamPublishStatus(event:NetStatusEvent):void
 			{
 				// debug
-					trace("nsPublish: "+event.info.code+" ("+event.info.description+")");
+					trace("stream: "+event.info.code+" ("+event.info.description+")");
 				
-				// After calling nsPublish.publish(false); we wait for a status event of "NetStream.Unpublish.Success" 
+				// After calling stream.publish(false); we wait for a status event of "NetStream.Unpublish.Success" 
 				// which tells us all the video and audio data has been written to the flv file. 
 				// It is at this time  that we can start playing the video we just recorded.
 					if (event.info.code == "NetStream.Unpublish.Success")
 					{	
 						trace('> unpublished')
-						//nsPublish.close();
+						//stream.close();
 						trace('> closed')
 						//startPlaying();
 					}
@@ -286,3 +287,4 @@ package display.video
 	}
 
 }
+

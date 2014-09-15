@@ -1,6 +1,6 @@
 package dev {
 	
-	import assets.SettingsAsset;
+	import assets.ControlsAsset;
 
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -27,7 +27,7 @@ package dev {
 	 * @author Dave Stewart
 	 */
 	
-	public class WebCam extends SettingsAsset
+	public class WebCam extends ControlsAsset
 	{
 		
 		// ----------------------------------------------------------------------------------------------------------

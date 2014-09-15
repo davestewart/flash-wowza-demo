@@ -7,10 +7,10 @@ package
 	
 	import display.video.VideoPlayer;
 	import display.video.VideoRecorder;
-	import display.views.SettingsView;
+	import display.views.Controls;
 	import dev.WebCam;
 	
-	import assets.SettingsAsset;
+	import assets.ControlsAsset;
 	
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -42,7 +42,7 @@ package
 		
 			// elements
 				protected var stage				:DisplayObjectContainer;
-				protected var controls			:SettingsView;
+				protected var controls			:Controls;
 				protected var player			:NetStreamVideo;
 				protected var recorder			:NetStreamVideo;
 				
@@ -89,7 +89,7 @@ package
 			protected function build():void 
 			{
 				// controls
-					controls = new SettingsView(settings);
+					controls = new Controls(settings);
 					stage.addChild(controls);
 
 				// event handlers
@@ -103,8 +103,6 @@ package
 					
 					recorder	= new VideoRecorder();
 					stage.addChild(recorder);
-					flipVideo(videoCamera);
-					flipVideo(videoRemote);
 					
 				// disable play controls
 					enablePlayControls(false);
@@ -246,8 +244,8 @@ package
 			{
 				if (nsPlay != null)
 				{
-					tfFps.text = (Math.round(nsPlay.currentFPS*1000)/1000)+" fps";
-					tfBufferLength.text = (Math.round(nsPlay.bufferLength*1000)/1000)+" secs";
+					tfFps.text = (Math.round(nsPlay.currentFPS * 1000) / 1000) + " fps";
+					tfBufferLength.text = (Math.round(nsPlay.bufferLength * 1000) / 1000) + " secs";
 				}
 				else
 				{
@@ -256,7 +254,55 @@ package
 				}
 			}
 
-			
+			protected function onNetStatus(event:Event):void 
+			{
+				// @see http://help.adobe.com/en_US/as3/dev/WS901d38e593cd1bac-3d11a09612fffaf8447-8000.html
+				switch(event.type)
+				{
+					case 'NetStream.Play.Start':
+						
+					break;
+					
+					case 'NetStream.Play.Stop':
+						
+					break;
+					
+					case 'NetStream.Play.Complete':
+						
+					break;
+					
+					case 'NetStream.SeekStart.Notify':
+						
+					break;
+					
+					case 'NetStream.Seek.Notify':
+						
+					break;
+					
+					case 'NetStream.Unpause.Notify':
+						
+					break;
+					
+					case 'NetStream.Unpause.Notify':
+						
+					break;
+					
+					case 'NetStream.Buffer.Full':
+						
+					break;
+					
+					case 'NetStream.Buffer.Flush':
+						
+					break;
+					
+					case 'NetStream.Buffer.Empty':
+						
+					break;
+					
+					default:
+						
+				}
+			}
 		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: utilities

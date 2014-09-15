@@ -2,8 +2,6 @@ package display.video {
 
 	import display.video.NetStreamVideo;
 	
-	import assets.SettingsAsset;
-	
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.events.NetStatusEvent;
@@ -37,7 +35,7 @@ package display.video {
 				
 			
 			// properties
-				
+			
 				
 			// variables
 				
@@ -48,11 +46,9 @@ package display.video {
 			public function VideoPlayer(width:int = 320, height:int = 240, connection:NetConnection = null)
 			{
 				super(width, height, connection);
-			
-				initialize();
 			}
 		
-			protected function initialize():void 
+			override protected function initialize():void 
 			{
 				
 			}
@@ -62,57 +58,38 @@ package display.video {
 		
 			protected function startPlaying():void
 			{
-				trace("doPlayStart");
+				// debug
+					trace("doPlayStart");
 				
 				// each time we play a video create a new NetStream object
-					nsPlay = new NetStream(connection);
-					nsPlay.addEventListener(NetStatusEvent.NET_STATUS, onStreamPlayStatus);
+					stream = new NetStream(connection);
+					stream.addEventListener(NetStatusEvent.NET_STATUS, onStreamPlayStatus);
 					
-					var nsPlayClient:Object = new Object();
-					nsPlay.client = nsPlayClient;
-
-				// trace the NetStream play status information
-					nsPlayClient.onPlayStatus = function(infoObject:Object):void
-					{
-						trace("nsPlay: onPlayStatus: "+infoObject.code+" ("+infoObject.description+")");
-						if (infoObject.code == "NetStream.Play.Complete")
-						{
-							stopPlaying();
-						}
-					}
-
-					nsPlayClient.onMetaData = function(infoObject:Object) :void
-					{
-						trace("onMetaData");
-						
-						// print debug information about the metaData
-						for (var propName:String in infoObject)
-						{
-							trace("  "+propName + " = " + infoObject[propName]);
-						}
-					};		
+				// client
+					stream.client = this;
 
 				// set the buffer time to 2 seconds
-					nsPlay.bufferTime = 2;
+					stream.bufferTime = 2;
 
 				// attach the NetStream object to the right most video object
-					videoRemote.attachNetStream(nsPlay);
+					video.attachNetStream(stream);
 				
 				// play the movie you just recorded
-					nsPlay.play(settings.streamName);
+					stream.play(settings.streamName);
 				
+				// UI
 					btnSubscribe.label = 'Stop';
 			}
 
 			protected function stopPlaying():void
 			{
 				// when you hit stop disconnect from the NetStream object and clear the video player
-					videoRemote.attachNetStream(null);
-					videoRemote.clear();
+					video.attachNetStream(null);
+					video.clear();
 					
-					if (nsPlay != null)
-						nsPlay.close();
-					nsPlay = null;
+					if (stream != null)
+						stream.close();
+					stream = null;
 					
 					btnSubscribe.label = 'Play';
 			}
@@ -134,13 +111,32 @@ package display.video {
 
 			protected function onStreamPlayStatus(event:NetStatusEvent):void
 			{
-				trace("nsPlay: onStatus: "+event.info.code+" ("+event.info.description+")");
+				trace("stream: onStatus: "+event.info.code+" ("+event.info.description+")");
 				if (event.info.code == "NetStream.Play.StreamNotFound" || event.info.code == "NetStream.Play.Failed")
 				{
 					tfPrompt.text = event.info.description;
 				}
 			}
 					
+			protected function onPlayStatus(event:Object):void
+			{
+				trace("stream: onPlayStatus: "+event.code+" ("+event.description+")");
+				if (event.code == "NetStream.Play.Complete")
+				{
+					stopPlaying();
+				}
+			}
+
+			protected function onMetaData(event:Object) :void
+			{
+				trace("onMetaData");
+				
+				// print debug information about the metaData
+				for (var propName:String in event)
+				{
+					trace("  "+propName + " = " + event[propName]);
+				}
+			}						
 			
 		
 		// ---------------------------------------------------------------------------------------------------------------------
