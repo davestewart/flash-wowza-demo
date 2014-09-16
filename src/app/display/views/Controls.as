@@ -2,6 +2,7 @@ package app.display.views
 {
 	import flash.events.Event;
 	import assets.ControlsAsset;
+	import core.media.video.VideoSettings;
 	
 	/**
 	 * ...
@@ -18,7 +19,7 @@ package app.display.views
 				
 			
 			// properties
-				protected var settings					:Object;
+				protected var settings					:VideoSettings;
 				protected var sizes						:Array;
 				protected var size						:Array;
 				
@@ -28,18 +29,18 @@ package app.display.views
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: instantiation
 		
-			public function Controls(settings:Object = null) 
+			public function Controls(settings:VideoSettings = null) 
 			{
 				super();
-				this.settings = settings || {};
+				this.settings = settings || new VideoSettings();
 				initialize();
 			}
 		
 			protected function initialize():void 
 			{
 				// text fields
-					tfStream.text			= settings.streamName;
-					tfServer.text			= settings.serverName;
+					tfStream.text			= settings.stream;
+					tfServer.text			= settings.server;
 
 				// sizes
 					sizes = 
@@ -108,12 +109,12 @@ package app.display.views
 		
 			private function onServerNameChange(event:Event = null):void 
 			{
-				settings.serverName		= tfServer.text;
+				settings.server			= tfServer.text;
 			}
 
 			private function onStreamNameChange(event:Event = null):void 
 			{
-				settings.streamName		= tfStream.text;
+				settings.stream			= tfStream.text;
 			}
 
 			private function onSizeSelect(event:Event):void 

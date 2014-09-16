@@ -55,7 +55,7 @@ package app.controllers
 			{
 				// settings
 					settings						= new VideoSettings();
-					settings.streamName				= 'video';
+					settings.stream				= 'video';
 				
 				// new settings for wowza live
 					var port			:int			= 1935;
@@ -69,29 +69,29 @@ package app.controllers
 						case 's3':
 							settings.username				= 'mixoff';
 							settings.password				= '20mixoff14';
-							settings.serverName				= 'rtmp://54.asda77.120.150/:1935';
-							settings.serverName				= 'rtmp://mixoff:20mixoff14@54.77.120.150/:1935';
-							settings.serverName				= 'rtmp://54.77.120.150:1935/mixoff';
+							settings.server				= 'rtmp://54.asda77.120.150/:1935';
+							settings.server				= 'rtmp://mixoff:20mixoff14@54.77.120.150/:1935';
+							settings.server				= 'rtmp://54.77.120.150:1935/mixoff';
 							break;
 							
 						case 'live':
 							settings.username				= 'mixoff';
 							settings.password				= 'mixoff';
-							settings.serverName				= 'rtmp://mixoff:mixoff@localhost/live';
-							settings.serverName				= 'rtmp://localhost/live';
+							settings.server				= 'rtmp://mixoff:mixoff@localhost/live';
+							settings.server				= 'rtmp://localhost/live';
 							break;
 							
 						case 'webcam':
-							settings.serverName				= "rtmp://localhost/webcamrecording";
-							settings.streamName				= "recording1";
+							settings.server				= "rtmp://localhost/webcamrecording";
+							settings.stream				= "recording1";
 							break;
 							
 						case 'demo':
-							settings.serverName				= 'rtmp://localhost/demo';
+							settings.server				= 'rtmp://localhost/demo';
 							break;
 							
 						default:
-							settings.serverName				= "rtmp://localhost/mixoff";
+							settings.server				= "rtmp://localhost/mixoff";
 					}                           
 					
 				// debug
@@ -145,7 +145,7 @@ package app.controllers
 				// create a connection to the wowza media server
 					connection				= new NetConnection();
 					connection.addEventListener(NetStatusEvent.NET_STATUS, onConnectionStatus);
-					connection.connect(settings.serverName);
+					connection.connect(settings.server);
 				
 				// connect cameras
 					player.connection		= connection;
@@ -183,7 +183,7 @@ package app.controllers
 			protected function onRecordClick(event:MouseEvent = null):void
 			{
 				! recorder.active
-					? recorder.record(settings.streamName)
+					? recorder.record(settings.stream)
 					: recorder.stop();
 			}
 
@@ -191,7 +191,7 @@ package app.controllers
 			protected function onPlayClick(event:MouseEvent = null):void
 			{
 				! player.active
-					? player.play(settings.streamName)
+					? player.play(settings.stream)
 					: player.stop();
 			}
 			

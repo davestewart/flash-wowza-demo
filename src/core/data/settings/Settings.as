@@ -8,7 +8,7 @@ package core.data.settings
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public dynamic class Settings
+	public class Settings
 	{
 		protected var _data			:Object;
 		

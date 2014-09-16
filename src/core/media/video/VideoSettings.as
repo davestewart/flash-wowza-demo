@@ -6,7 +6,7 @@ package core.media.video
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public dynamic class VideoSettings extends Settings
+	public class VideoSettings extends Settings
 	{
 		
 		// ---------------------------------------------------------------------------------------------------------------------
@@ -17,11 +17,11 @@ package core.media.video
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: instantiation
 		
-			public function VideoSettings(serverName:String = '', streamName:String = '', width:Number = 320, height:Number = 240, quality:int = 90, fps:int = 25) 
+			public function VideoSettings(server:String = '', stream:String = '', width:Number = 320, height:Number = 240, quality:int = 90, fps:int = 25) 
 			{
 				super();
-				_data.serverName		= serverName;
-				_data.streamName		= streamName;
+				_data.server			= server;
+				_data.stream			= stream;
 				_data.width				= width;
 				_data.height			= height;
 				_data.quality			= quality;
@@ -33,16 +33,16 @@ package core.media.video
 		// { region: accessors
 		
 		
-			public function get serverName():String { return _data.serverName; }
-			public function set serverName(value:String):void 
+			public function get server():String { return _data.server; }
+			public function set server(value:String):void 
 			{
-				set('serverName', value);
+				set('server', value);
 			}
 
-			public function get streamName():String { return _data.streamName; }
-			public function set streamName(value:String):void 
+			public function get stream():String { return _data.stream; }
+			public function set stream(value:String):void 
 			{
-				set('streamName', value);
+				set('stream', value);
 			}
 
 			public function get username():String { return _data.username; }
