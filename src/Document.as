@@ -1,18 +1,25 @@
 package 
 {
-	import display.views.WebCam;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	
+	import com.demonsters.debugger.MonsterDebugger;
+	
+	import app.controllers.App;
+	import dev.WebCam;
 	
 	/**
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public class Main extends Sprite 
+	public class Document extends Sprite 
 	{
 		
-		public function Main():void 
+		public function Document():void 
 		{
+			MonsterDebugger.initialize(this);
+			
+
 			if (stage) init();
 			else addEventListener(Event.ADDED_TO_STAGE, init);
 		}

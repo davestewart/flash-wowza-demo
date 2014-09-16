@@ -1,0 +1,7 @@
+nc: NetConnection.Connect.Success (Connection succeeded.)
+nsPublish: NetStream.Publish.Denied (RTMP Publishing not allowed.  Client is not in list of valid encoders.)
+nsPublish: NetStream.Publish.Denied (RTMP Publishing not allowed.  Client is not in list of valid encoders.)
+nc: NetConnection.Connect.Closed (undefined)
+
+http://www.zeta1.com.ar/blog/wp-content/uploads/2014/02/WowzaMediaServerMediaSecurity_UsersGuide.pdf
+	
