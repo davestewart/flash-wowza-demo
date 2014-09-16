@@ -1,4 +1,4 @@
-package core.display.video {
+package core.media.video {
 	import flash.net.NetConnection;
 	
 	import flash.events.Event;
@@ -78,16 +78,6 @@ package core.display.video {
 			{
 				video.clear();
 				setupCamera();
-				
-				/*
-				var camera:flash.media.Camera = Camera.getCamera();
-
-				//var v:flash.media.Video = new Video();
-				//addChild(v);
-
-				video.attachCamera(camera);
-				*/
-
 			}
 			
 			protected function setupCamera():void
@@ -106,7 +96,7 @@ package core.display.video {
 					}
 					else
 					{
-						trace('Could not get camera');
+						trace('VideoRecorder: Could not get camera');
 						//sourceVideoLabel.text = "No Camera Found\n";
 					}
 					
@@ -119,14 +109,13 @@ package core.display.video {
 					}
 					else
 					{
-						trace('Could not get microphone');
+						trace('VideoRecorder: Could not get microphone');
 						//sourceVideoLabel.text += "No Microphone Found\n";
 					}
 			}
 
 			protected function updateCamera():void
 			{
-				trace('setting up camera');
 				if (camera)
 				{
 					// variables
@@ -144,8 +133,8 @@ package core.display.video {
 						camera.setQuality(bandwidth, quality);
 						
 					// debug
-						trace('props:', width, height, bandwidth, quality, keyframeInterval);
-						trace('rate:', rate)
+						//trace('props:', width, height, bandwidth, quality, keyframeInterval);
+						//trace('rate:', rate)
 				}
 			}
 		
@@ -156,10 +145,7 @@ package core.display.video {
 			public function record(streamName:String = null):void
 			{
 				// debug
-					trace('recording...');
-					
-				// stop video playback
-					//close();
+					trace('VideoRecorder: recording...');
 					
 				// set active
 					_active = true;
@@ -176,8 +162,7 @@ package core.display.video {
 					}
 
 				// publish the stream by name
-					var mode:String = _append ? "append" : "record"; // can also have "live"
-					//mode = 'default';
+					var mode:String = _append ? "append" : "record"; // can also have "live" and "default", but "record" has NetStream events
 					stream.publish(format + ':' + streamName, mode);
 					
 				// add custom metadata to the header of the .flv file
@@ -195,7 +180,7 @@ package core.display.video {
 			override public function stop():void
 			{
 				// debug
-					trace('stopping recording...')
+					//trace('stopping recording...')
 				
 				// set active
 					_active = false;
@@ -224,10 +209,9 @@ package core.display.video {
 
 				// After stopping the publishing we need to check if there is video content in the NetStream buffer. 
 				// If there is data we are going to monitor the video upload progress by calling flushVideoBuffer every 250ms.
-					if(stream.bufferLength > 0)
-						intervalId = setInterval(onCheckBufferInterval, 250)
-					else
-						finishRecording();		
+					stream.bufferLength > 0
+						? intervalId = setInterval(onCheckBufferInterval, 250)
+						: finishRecording();		
 			}
 			
 
@@ -293,7 +277,7 @@ package core.display.video {
 				// @see http://help.adobe.com/en_US/as3/dev/WS901d38e593cd1bac-3d11a09612fffaf8447-8000.html
 				
 				// debug
-					trace('> finished recording!')
+					trace('VideoRecorder: finished recording!')
 					
 				// after we have hit "Stop" recording, and after the buffered video data has been
 				// sent to the Wowza Media Server, close the publishing stream
@@ -321,19 +305,17 @@ package core.display.video {
 						
 						// recording events
 							case 'NetStream.Record.Stop':
-								stream.publish("null");
+								trace(1);
+								stream.publish('null');
 								stream.close();
 								break;
 								
 						// publish events
 							case 'NetStream.Unpublish.Success':
+								trace(2);
 								// After calling stream.publish(false); we wait for a status event of "NetStream.Unpublish.Success" 
 								// which tells us all the video and audio data has been written to the flv file. 
 								// It is at this time  that we can start playing the video we just recorded.
-								trace('> unpublished')
-								stream.close();
-								trace('> closed')
-								//startPlaying();
 								break;
 							
 					}

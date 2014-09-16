@@ -1,4 +1,4 @@
-package core.display.video {
+package core.media.video {
 
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -104,6 +104,11 @@ package core.display.video {
 				// play the movie you just recorded
 					_stream.play(streamName);
 			}
+			
+			public function replay():void
+			{
+				_stream.seek(0);
+			}
 
 			public function stop():void
 			{
@@ -123,9 +128,10 @@ package core.display.video {
 				
 				if (_stream != null)
 				{
-					_stream.close();
+					_stream.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
+					_stream.dispose();
+					_stream = null;
 				}
-				_stream = null;
 			}
 			
 		// ---------------------------------------------------------------------------------------------------------------------
@@ -248,14 +254,6 @@ package core.display.video {
 			 */
 			public function onPlayStatus(event:Object) :void
 			{
-								
-				trace("onPlayStatus ");
-				// print debug information about the metaData
-				for (var propName:String in event)
-				{
-					trace("  "+propName + " = " + event[propName]);
-				}
-
 				dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, event));
 			}						
 			
@@ -265,7 +263,7 @@ package core.display.video {
 			 */
 			public function onMetaData(data:Object) :void
 			{
-				data.code = 'NetStream.Play.Metadata';
+				data.code = 'NetStream.Play.MetaData';
 				dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, data));
 			}						
 			

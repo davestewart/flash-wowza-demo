@@ -1,4 +1,4 @@
-package core.display.video {
+package core.media.video {
 	import core.data.settings.Settings;
 	
 	/**

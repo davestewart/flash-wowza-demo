@@ -1,11 +1,11 @@
 package app.controllers {
-	import core.display.video.VideoSettings;
+	import core.media.video.VideoSettings;
 	import flash.display.DisplayObjectContainer;
 	
 	
 	
-	import core.display.video.VideoPlayer;
-	import core.display.video.VideoRecorder;
+	import core.media.video.VideoPlayer;
+	import core.media.video.VideoRecorder;
 	import app.display.views.Controls;
 	import dev.WebCam;
 	
@@ -215,6 +215,11 @@ package app.controllers {
 					: player.stop();
 			}
 			
+			protected function onSettingsClick(event:MouseEvent):void 
+			{
+				trace(settings);
+			}
+			
 
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: connection handlers
@@ -270,14 +275,14 @@ package app.controllers {
 							// this gets called when the stream has completed playing
 							case 'NetStream.Play.Complete':
 								controls.btnPlay.label = 'Play';
+								player.replay();
 								break;
 								
 								
 							case 'NetStream.Play.MetaData':
-								trace("onMetaData");
-								for (var propName:String in event)
+								for (var name:String in event.info)
 								{
-									trace("  "+propName + " = " + event[propName]);
+									trace('	> ' +name + ' = ' + event.info[name]);
 								}
 								break;
 								
@@ -351,11 +356,6 @@ package app.controllers {
 				}
 			}
 			
-			protected function onSettingsClick(event:MouseEvent):void 
-			{
-				trace(settings);
-			}
-
 
 		
 		// ---------------------------------------------------------------------------------------------------------------------
