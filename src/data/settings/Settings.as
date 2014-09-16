@@ -8,34 +8,34 @@ package data.settings
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public class Settings extends EventDispatcher 
+	public dynamic class Settings
 	{
-		protected var formatter:Event;
+		protected var _data			:Object;
 		
 		public function Settings() 
 		{
-			formatter = new Event();
+			_data = { };
 		}
 		
-		public function addEventListener(callback)
-		{
-			
-		}
-		
-		public function removeEventListener(callback)
-		{
-			
-		}
-	
 		public function set(name:String, value:*):void 
 		{
-			this['_' + name] = value;
-			dispatchEvent(new ValueEvent(name, value));
+			_data[name] = value;
+			//dispatchEvent(new ValueEvent(name, value));
 		}
 		
-		protected function format(className:String, ...rest):String
+		public function getData():Object
 		{
-			return formatter.formatToString(className, rest);
+			return _data;
+		}
+		
+		public function toString():String
+		{
+			var arr:Array = [];
+			for (var name:String in _data)
+			{
+				arr.push(name + '="' +_data[name]+ '"');
+			}
+			return '[object Settings ' +arr.join(' ')+ ']';
 		}
 			
 	}

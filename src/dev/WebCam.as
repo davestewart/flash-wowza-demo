@@ -36,7 +36,7 @@ package dev {
 			// variables
 				protected var connection				:NetConnection;
 				
-				protected var nsPublish					:NetStream;        
+				protected var stream					:NetStream;        
 				protected var nsPlay					:NetStream;
 				
 				protected var camera					:Camera;
@@ -47,6 +47,11 @@ package dev {
 				
 				protected var sizes						:Array;
 				protected var size						:Array;
+				
+				protected var env						:String;
+				protected var username					:String;
+				protected var password					:String;
+				protected var port						:int;
 				
 			
 		// ----------------------------------------------------------------------------------------------------------
@@ -69,18 +74,42 @@ package dev {
 			protected function setupServer():void
 			{
 				// new settings for wowza live
-					var port		:int			= 1935;
-					var user		:String			= 'mixoff';
-					var pass		:String			= '20mixoff14';
-				
-					/*
-					serverName						= 'http://54.asda77.120.150/:1935';
-					serverName						= 'http://mixoff:20mixoff14@54.77.120.150/:1935';
-					serverName						= 'http://54.77.120.150/';
-					*/
+					port			= 1935;
 					
-					serverName						= "rtmp://localhost/webcamrecording";
-					streamName						= "recording1";
+				// environment
+					//env			= 'live';
+					//env			= 's3';
+					//env			= 'demo';
+				
+				// server
+					switch(env)
+					{
+						case 's3':
+							serverName				= 'rtmp://54.asda77.120.150/:1935';
+							serverName				= 'rtmp://mixoff:20mixoff14@54.77.120.150/:1935';
+							serverName				= 'rtmp://54.77.120.150:1935/live';
+							break;
+							
+						case 'live':
+							username				= 'mixoff';
+							password				= '20mixoff14';
+							serverName				= 'rtmp://mixoff:mixoff@localhost/live';
+							serverName				= 'rtmp://localhost/live';
+							break;
+							
+						case 'demo':
+							serverName				= 'rtmp://localhost/demo';
+							break;
+							
+						default:
+							username				= 'mixoff';
+							password				= 'mixoff';
+							serverName				= "rtmp://localhost/webcamrecording";
+							serverName				= "rtmp://localhost/mixoff";
+					}                           
+					                            
+				// stream                       
+					streamName						= "myStream";
 			}
 
 			protected function setupUI():void 
@@ -92,6 +121,7 @@ package dev {
 				// sizes
 					sizes = 
 					[
+						[320, 180],
 						[640, 360],
 						[854, 480],
 						[960, 540],
@@ -120,8 +150,8 @@ package dev {
 					btnConnect.addEventListener(MouseEvent.CLICK, onConnectClick);
 					
 				// prepare video
-					flipVideo(videoCamera);
-					flipVideo(videoRemote);
+					flipVideo(videoRecord);
+					flipVideo(videoPlay);
 					
 				// disable play controls
 					enablePlayControls(false);
@@ -155,7 +185,7 @@ package dev {
 			protected function enablePlayControls(isEnable:Boolean):void
 			{
 				btnRecord.enabled		= isEnable;
-				btnPlay.enabled	= isEnable;
+				btnPlay.enabled			= isEnable;
 				tfStream.enabled		= isEnable;
 				cbAppend.enabled		= isEnable;
 			}
@@ -269,8 +299,8 @@ package dev {
 					setInterval(onStreamInterval, 500);
 				
 				// clear camera
-					videoCamera.clear();
-					videoCamera.attachCamera(camera);
+					videoRecord.clear();
+					videoRecord.attachCamera(camera);
 				
 			}
 			
@@ -282,14 +312,14 @@ package dev {
 			protected function cleanup():void 
 			{
 				// camera record
-					nsPublish					= null;
-					videoCamera.attachNetStream(null);
-					videoCamera.clear();
+					stream					= null;
+					videoRecord.attachNetStream(null);
+					videoRecord.clear();
 					
 				// camera play
 					nsPlay						= null;
-					videoRemote.attachNetStream(null);
-					videoRemote.clear();
+					videoPlay.attachNetStream(null);
+					videoPlay.clear();
 					
 				// connection close
 					connection					= null;
@@ -335,8 +365,8 @@ package dev {
 			{
 				if (nsPlay != null)
 				{
-					tfFps.text = (Math.round(nsPlay.currentFPS*1000)/1000)+" fps";
-					tfBufferLength.text = (Math.round(nsPlay.bufferLength*1000)/1000)+" secs";
+					tfFps.text = (Math.round(nsPlay.currentFPS * 1000) / 1000) + " fps";
+					tfBufferLength.text = (Math.round(nsPlay.bufferLength * 1000) / 1000) + " secs";
 				}
 				else
 				{
@@ -361,52 +391,42 @@ package dev {
 			// Start recording video to the server
 			protected function startRecording():void
 			{
-				
 				// stop video playback
 					stopPlaying();
 				
 				// create a new NetStream object for publishing
-					nsPublish = new NetStream(connection);
+					stream = new NetStream(connection);
+					stream.addEventListener(NetStatusEvent.NET_STATUS, onStreamPublishStatus);
 				
+				// client
+					stream.client = { };
+
+				// set the buffer time to 20 seconds to buffer 20 seconds of video
+				// data for better performance and higher quality video
+					stream.bufferTime = 20;
+
 				// add h264 settings
 					var h264Settings:H264VideoStreamSettings = new H264VideoStreamSettings();
 					h264Settings.setProfileLevel(H264Profile.BASELINE, H264Level.LEVEL_3_1);
-					nsPublish.videoStreamSettings = h264Settings;
+					stream.videoStreamSettings = h264Settings;
 
-				// update camera settings
-					var index		:int		= comboSizes.selectedIndex;
-					var size		:Array		= sizes[index];
-					camera.setMode(size[0], size[1], 25, true);
-
-					var nsPublishClient:Object = new Object();
-					nsPublish.client = nsPublishClient;
-
-				// trace the NetStream status information
-					nsPublish.addEventListener(NetStatusEvent.NET_STATUS, onStreamPublishStatus);
-				
 				// publish the stream by name
-					var mode:String = cbAppend.selected ? "append" : "record";
-					nsPublish.publish(streamName + '.f4v', mode);
-				
-				// do the live streaming
-				//nsPublish.publish('mp4:' + streamName, 'live');
-					nsPublish.publish('mp4:' + streamName, mode);
-				
-				//nsPublish.publish("mp4:webCamX.f4v", "live");
+					var mode:String = cbAppend.selected ? "append" : "record"; // also 'live'
+					mode = 'default';
+					stream.publish('mp4:' + streamName, mode);
 				
 				// add custom metadata to the header of the .flv file
+					/*
 					var metaData:Object = new Object();
 					metaData["description"] = "Recorded using WebcamRecording example."
 					nsPublish.send("@setDataFrame", "onMetaData", metaData);
+					*/
 
 				// attach the camera and microphone to the server
-					nsPublish.attachCamera(camera);
-					nsPublish.attachAudio(microphone);
+					stream.attachCamera(camera);
+					stream.attachAudio(microphone);
 				
-				// set the buffer time to 20 seconds to buffer 20 seconds of video
-				// data for better performance and higher quality video
-					nsPublish.bufferTime = 20;
-
+				// ui
 					btnRecord.label = 'Stop';
 			}
 
@@ -420,7 +440,7 @@ package dev {
 					function onCheckBufferInterval():void
 					{
 						trace('VideoRecorder: Waiting for buffer to empty');
-						if (nsPublish.bufferLength == 0)
+						if (stream.bufferLength == 0)
 						{
 							trace('VideoRecorder: Buffer is empty!');
 							clearInterval(intervalId);
@@ -429,14 +449,14 @@ package dev {
 					}
 
 				// stop streaming video and audio to the publishing NetStream object
-					nsPublish.attachCamera(null);
+					stream.attachCamera(null);
 					
 				// disabled audio so that mp4 will record
-					nsPublish.attachAudio(null); 
+					stream.attachAudio(null); 
 
 				// After stopping the publishing we need to check if there is video content in the NetStream buffer. 
 				// If there is data we are going to monitor the video upload progress by calling flushVideoBuffer every 250ms.
-					if (nsPublish.bufferLength > 0)
+					if (stream.bufferLength > 0)
 					{
 						// update UI
 							btnRecord.label	= 'Wait...';
@@ -463,8 +483,8 @@ package dev {
 					
 				// after we have hit "Stop" recording, and after the buffered video data has been
 				// sent to the Wowza Media Server, close the publishing stream
-					nsPublish.publish("null");
-					nsPublish.close();
+					stream.publish("null");
+					stream.close();
 					
 				// update UI
 					btnRecord.label = 'Record';
@@ -483,7 +503,7 @@ package dev {
 						trace('> unpublished')
 						//nsPublish.close();
 						trace('> closed')
-						//startPlaying();
+						startPlaying();
 					}
 
 					if (event.info.code == "NetStream.Play.StreamNotFound" || event.info.code == "NetStream.Play.Failed")
@@ -508,7 +528,8 @@ package dev {
 
 			protected function startPlaying():void
 			{
-				trace("doPlayStart");
+				// debug
+					trace("playing:" + streamName);
 				
 				// each time we play a video create a new NetStream object
 					nsPlay = new NetStream(connection);
@@ -542,7 +563,7 @@ package dev {
 					nsPlay.bufferTime = 2;
 
 				// attach the NetStream object to the right most video object
-					videoRemote.attachNetStream(nsPlay);
+					videoPlay.attachNetStream(nsPlay);
 				
 				// play the movie you just recorded
 					nsPlay.play(streamName);
@@ -553,8 +574,8 @@ package dev {
 			protected function stopPlaying():void
 			{
 				// when you hit stop disconnect from the NetStream object and clear the video player
-					videoRemote.attachNetStream(null);
-					videoRemote.clear();
+					videoPlay.attachNetStream(null);
+					videoPlay.clear();
 					
 					if (nsPlay != null)
 						nsPlay.close();

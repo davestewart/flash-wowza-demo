@@ -6,18 +6,12 @@ package display.video
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public class VideoSettings extends Settings
+	public dynamic class VideoSettings extends Settings
 	{
 		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: properties
 		
-			protected var _serverName		:String;
-			protected var _streamName		:String;
-			protected var _width			:Number;
-			protected var _height			:Number;
-			protected var _quality			:String;
-			protected var _fps				:int;
 				
 				
 		// ---------------------------------------------------------------------------------------------------------------------
@@ -25,12 +19,13 @@ package display.video
 		
 			public function VideoSettings(serverName:String = '', streamName:String = '', width:Number = 320, height:Number = 240, quality:int = 90, fps:int = 25) 
 			{
-				_serverName		= serverName;
-				_streamName		= streamName;
-				_width			= width;
-				_height			= height;
-				_quality		= quality;
-				_fps			= fps;
+				super();
+				_data.serverName		= serverName;
+				_data.streamName		= streamName;
+				_data.width				= width;
+				_data.height			= height;
+				_data.quality			= quality;
+				_data.fps				= fps;
 			}
 			
 		
@@ -38,49 +33,67 @@ package display.video
 		// { region: accessors
 		
 		
-			public function get serverName():String { return _serverName; }
+			public function get serverName():String { return _data.serverName; }
 			public function set serverName(value:String):void 
 			{
 				set('serverName', value);
 			}
 
-			public function get streamName():String { return _streamName; }
+			public function get streamName():String { return _data.streamName; }
 			public function set streamName(value:String):void 
 			{
 				set('streamName', value);
 			}
 
-			public function get width():Number { return _width; }
+			public function get username():String { return _data.username; }
+			public function set username(value:String):void 
+			{
+				set('username', value);
+			}
+
+			public function get password():String { return _data.password; }
+			public function set password(value:String):void 
+			{
+				set('password', value);
+			}
+
+			public function get width():Number { return _data.width; }
 			public function set width(value:Number):void 
 			{
 				set('width', value);
 			}
 
-			public function get height():Number { return _height; }
+			public function get height():Number { return _data.height; }
 			public function set height(value:Number):void 
 			{
 				set('height', value);
 			}
 
-			public function get quality():String { return _quality; }
-			public function set quality(value:String):void 
+			public function get quality():int { return _data.quality; }
+			public function set quality(value:int):void 
 			{
 				set('quality', value);
 			}
 
-			public function get fps():int { return _fps; }
+			public function get fps():int { return _data.fps; }
 			public function set fps(value:int):void 
 			{
 				set('fps', value);
 			}
 			
+			public function get format():String { return _data.format; }
+			public function set format(value:String):void 
+			{
+				set('format', value);
+			}
+
 
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: accessors
 		
-			override public function toString():void 
+			override public function toString():String 
 			{
-				return format('VideoSettings', 'serverName', 'streamName', 'width', 'height', 'quality', 'fps');
+				return super.toString().replace('Settings', 'VideoSettings');
 			}
 		
 	}

@@ -1,8 +1,8 @@
 package  
 {
-	import display.video.NetStreamVideo;
 	import display.video.VideoSettings;
 	import flash.display.DisplayObjectContainer;
+	
 	
 	
 	import display.video.VideoPlayer;
@@ -43,8 +43,8 @@ package
 			// elements
 				protected var stage				:DisplayObjectContainer;
 				protected var controls			:Controls;
-				protected var player			:NetStreamVideo;
-				protected var recorder			:NetStreamVideo;
+				protected var player			:VideoPlayer;
+				protected var recorder			:VideoRecorder;
 				
 			
 			// connection
@@ -54,6 +54,7 @@ package
 			// server credentials
 				
 			// variables
+				protected var env				:String;
 				
 			
 		// ---------------------------------------------------------------------------------------------------------------------
@@ -64,60 +65,83 @@ package
 				this.stage = stage;
 				initialize();
 				build()
+				connect();
 			}
 			
 			protected function initialize():void
 			{
 				// settings
 					settings						= new VideoSettings();
+					settings.streamName				= 'video';
 				
 				// new settings for wowza live
-					var port		:int			= 1935;
-					var user		:String			= 'mixoff';
-					var pass		:String			= '20mixoff14';
+					var port			:int			= 1935;
 				
-					/*
-					settings.serverName				= 'http://54.asda77.120.150/:1935';
-					settings.serverName				= 'http://mixoff:20mixoff14@54.77.120.150/:1935';
-					settings.serverName				= 'http://54.77.120.150/';
-					*/
 					
-					settings.serverName				= "rtmp://localhost/webcamrecording";
-					settings.streamName				= "recording1";
+					env = '';
+					
+				// switch settings based on environment
+					switch(env)
+					{
+						case 's3':
+							settings.username				= 'mixoff';
+							settings.password				= '20mixoff14';
+							settings.serverName				= 'rtmp://54.asda77.120.150/:1935';
+							settings.serverName				= 'rtmp://mixoff:20mixoff14@54.77.120.150/:1935';
+							settings.serverName				= 'rtmp://54.77.120.150:1935/mixoff';
+							break;
+							
+						case 'live':
+							settings.username				= 'mixoff';
+							settings.password				= 'mixoff';
+							settings.serverName				= 'rtmp://mixoff:mixoff@localhost/live';
+							settings.serverName				= 'rtmp://localhost/live';
+							break;
+							
+						case 'webcam':
+							settings.serverName				= "rtmp://localhost/webcamrecording";
+							settings.streamName				= "recording1";
+							break;
+							
+						case 'demo':
+							settings.serverName				= 'rtmp://localhost/demo';
+							break;
+							
+						default:
+							settings.serverName				= "rtmp://localhost/mixoff";
+					}                           
+					
+				// debug
+					trace(settings);
 			}
 
 			protected function build():void 
 			{
 				// controls
-					controls = new Controls(settings);
+					controls		= new Controls(settings);
+					controls.enablePlayControls(false);
 					stage.addChild(controls);
 
 				// event handlers
 					controls.btnConnect.addEventListener(MouseEvent.CLICK, onConnectClick);
 					controls.btnRecord.addEventListener(MouseEvent.CLICK, onRecordClick);
 					controls.btnPlay.addEventListener(MouseEvent.CLICK, onPlayClick);
+					controls.btnSettings.addEventListener(MouseEvent.CLICK, onSettingsClick);
 					
-				// players
-					player		= new VideoPlayer();
-					stage.addChild(player);
-					
-					recorder	= new VideoRecorder();
+				// recorder
+					recorder		= new VideoRecorder();
+					recorder.x		= controls.videoRecord.x;
+					recorder.y		= controls.videoRecord.y;
+					recorder.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
 					stage.addChild(recorder);
 					
-				// disable play controls
-					enablePlayControls(false);
+				// player
+					player			= new VideoPlayer();
+					player.x		= controls.videoPlay.x;
+					player.y		= controls.videoPlay.y;
+					player.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
+					stage.addChild(player);
 			}
-			
-			protected function build():void 
-			{
-				/*
-				settings	= new SettingsView();
-				stage.addChild(settings);
-				
-				*/
-				
-			}
-		
 			
 		
 		// ---------------------------------------------------------------------------------------------------------------------
@@ -126,46 +150,30 @@ package
 			protected function connect():void 
 			{
 				// create a connection to the wowza media server
-					connection = new NetConnection();
+					connection				= new NetConnection();
 					connection.addEventListener(NetStatusEvent.NET_STATUS, onConnectionStatus);
 					connection.connect(settings.serverName);
-							
-				// ui
-					btnConnect.label = "Disconnect";
 				
+				// connect cameras
+					player.connection		= connection;
+					recorder.connection		= connection;
+							
 				// monitor frame rate and buffer length
 					setInterval(onStreamInterval, 500);
-				
-				// clear camera
-					videoCamera.clear();
-					videoCamera.attachCamera(camera);
-				
 			}
 			
 			protected function disconnect():void 
 			{
 				// camera record
-					nsPublish					= null;
-					videoCamera.attachNetStream(null);
-					videoCamera.clear();
-					
-				// camera play
-					nsPlay						= null;
-					videoRemote.attachNetStream(null);
-					videoRemote.clear();
+					recorder.close();
+					player.close();
 					
 				// connection close
 					connection.close();
-					connection					= null;
+					connection = null;
 					
 				// controls
-					enablePlayControls(false);
-
-				// ui
-					btnSubscribe.label			= 'Play';
-					btnPublish.label			= 'Record';
-					btnConnect.label			= "Connect";
-					tfPrompt.text				= "";
+					controls.reset();
 			}
 			
 			
@@ -178,39 +186,34 @@ package
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: protected methods
 		
-			
+			protected function log(event:NetStatusEvent):void
+			{
+				trace('STATUS: ' + event.info.code+' (' + event.info.description + ')');
+			}
 		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: interface handlers
 		
 			protected function onConnectClick(event:MouseEvent):void
 			{
-				// connect to the Wowza Media Server
-				if (connection == null)
-				{
-					connect();
-				}
-				else
-				{
-					disconnect();
-				}
+				connection == null
+					? connect()
+					: disconnect();
 			}
 			
 			protected function onRecordClick(event:MouseEvent = null):void
 			{
-				if (btnPublish.label == 'Record')
-					startRecording();
-				else
-					stopRecording();
+				! recorder.active
+					? recorder.record(settings.streamName)
+					: recorder.stop();
 			}
 
 
-			protected function onPlayClick(event:MouseEvent):void
+			protected function onPlayClick(event:MouseEvent = null):void
 			{
-				if (btnSubscribe.label == 'Play')
-					startPlaying();
-				else
-					stopPlaying();
+				! player.active
+					? player.play(settings.streamName)
+					: player.stop();
 			}
 			
 
@@ -219,90 +222,142 @@ package
 		
 			protected function onConnectionStatus(event:NetStatusEvent):void
 			{
-				var code:String = event.info.code;
+				// debug
+					log(event);
+						
+				// action
+					switch(event.info.code)
+					{
+						case 'NetConnection.Connect.Success':
+							controls.btnConnect.label = "Disconnect";
+							controls.enablePlayControls(true);
+							recorder.setup();
+							break;
+						
+						case 'NetConnection.Connect.Failed':
+							controls.tfPrompt.text = "Connection failed: Try rtmp://[server ip]/[app name]";
+							break;
+						
+						case 'NetConnection.Connect.Rejected':
+							controls.tfPrompt.text = event.info.description;
+							break;
+					}				
+			}
+			
+			protected function onNetStatus(event:NetStatusEvent):void 
+			{
+				// debug
+					log(event);
 				
-				trace("nc: " + code+" (" + event.info.description + ")");
+				// action
+					// @see http://help.adobe.com/en_US/as3/dev/WS901d38e593cd1bac-3d11a09612fffaf8447-8000.html
+					switch(event.info.code)
+					{
+						// error events
+							case 'NetStream.Play.StreamNotFound':
+							case 'NetStream.Play.Failed':
+								controls.btnPlay.label = 'Play';
+								break;
+							
+						// play events
+							case 'NetStream.Play.Start':
+								controls.btnPlay.label = 'Stop';
+								break;
+							
+							case 'NetStream.Play.Stop':
+								// this gets called when the 
+								break;
+							
+							// this gets called when the stream has completed playing
+							case 'NetStream.Play.Complete':
+								controls.btnPlay.label = 'Play';
+								break;
 								
-				switch(code)
-				{
-					case 'NetConnection.Connect.Success':
-						enablePlayControls(true);
-					break;
-					
-					case 'NetConnection.Connect.Failed':
-						tfPrompt.text = "Connection failed: Try rtmp://[server-ip-address]/webcamrecording";
-					break;
-					
-					case 'NetConnection.Connect.Rejected':
-						tfPrompt.text = event.info.description;
-					break;
-				}				
+								
+							case 'NetStream.Play.MetaData':
+								trace("onMetaData");
+								for (var propName:String in event)
+								{
+									trace("  "+propName + " = " + event[propName]);
+								}
+								break;
+								
+							
+						// seek events
+							case 'NetStream.SeekStart.Notify':
+								
+								break;
+							
+							case 'NetStream.Seek.Notify':
+								
+								break;
+							
+							case 'NetStream.Unpause.Notify':
+								
+								break;
+							
+							case 'NetStream.Unpause.Notify':
+								
+								break;
+							
+						// publish events
+							case 'NetStream.Publish.Start':
+								player.stop();
+								break;
+							
+							case 'NetStream.Unpublish.Success':
+								trace('Published! Now playing...');
+								onPlayClick();
+								break;
+							
+						// record events
+							case 'NetStream.Record.Start':
+								controls.btnRecord.label = 'Stop';
+								break;
+							
+							case 'NetStream.Record.Stop':
+								controls.btnRecord.label = 'Record';
+								break;
+							
+						// buffer events
+							case 'NetStream.Buffer.Full':
+								
+								break;
+							
+							case 'NetStream.Buffer.Flush':
+								
+								break;
+							
+							case 'NetStream.Buffer.Empty':
+								
+								break;
+							
+							default:
+							
+					}
 			}
 			
 			// function to monitor the frame rate and buffer length
 			protected function onStreamInterval():void
 			{
-				if (nsPlay != null)
+				if (player.stream)
 				{
-					tfFps.text = (Math.round(nsPlay.currentFPS * 1000) / 1000) + " fps";
-					tfBufferLength.text = (Math.round(nsPlay.bufferLength * 1000) / 1000) + " secs";
+					controls.tfFps.text = (Math.round(player.stream.currentFPS * 1000) / 1000) + " fps";
+					controls.tfBufferLength.text = (Math.round(player.stream.bufferLength * 1000) / 1000) + " secs";
 				}
 				else
 				{
-					tfFps.text = "";
-					tfBufferLength.text = "";
+					controls.tfFps.text = "";
+					controls.tfBufferLength.text = "";
 				}
+			}
+			
+			protected function onSettingsClick(event:MouseEvent):void 
+			{
+				trace(settings);
 			}
 
-			protected function onNetStatus(event:Event):void 
-			{
-				// @see http://help.adobe.com/en_US/as3/dev/WS901d38e593cd1bac-3d11a09612fffaf8447-8000.html
-				switch(event.type)
-				{
-					case 'NetStream.Play.Start':
-						
-					break;
-					
-					case 'NetStream.Play.Stop':
-						
-					break;
-					
-					case 'NetStream.Play.Complete':
-						
-					break;
-					
-					case 'NetStream.SeekStart.Notify':
-						
-					break;
-					
-					case 'NetStream.Seek.Notify':
-						
-					break;
-					
-					case 'NetStream.Unpause.Notify':
-						
-					break;
-					
-					case 'NetStream.Unpause.Notify':
-						
-					break;
-					
-					case 'NetStream.Buffer.Full':
-						
-					break;
-					
-					case 'NetStream.Buffer.Flush':
-						
-					break;
-					
-					case 'NetStream.Buffer.Empty':
-						
-					break;
-					
-					default:
-						
-				}
-			}
+
 		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: utilities

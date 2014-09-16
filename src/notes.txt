@@ -28,3 +28,25 @@
 		display
 			video
 				NetStreamVideo
+
+				
+				
+				
+For 64 & 32bit video + Flash Develop, edit 
+
+	C:\Program Files (x86)\Development\FlashDevelop\Tools\flexsdk\bin\jvm.config
+
+and add
+
+	java.home=C:\Program Files (x86)\Java\jre7\
+	
+	
+	
+How to start and stop Wowza Streaming Engine software
+http://www.wowza.com/forums/content.php?631
+	
+How to record live streams (Wowza Streaming Engine)
+http://www.wowza.com/forums/content.php?574
+	
+How to set up live streaming using an RTMP-based encoder
+http://www.wowza.com/forums/content.php?36
