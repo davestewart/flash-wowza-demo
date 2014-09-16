@@ -1,5 +1,4 @@
-package display.views
-{
+package app.display.views {
 	import assets.ControlsAsset;
 	
 	import flash.events.Event;

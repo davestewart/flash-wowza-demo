@@ -1,5 +1,4 @@
-package display.video 
-{
+package core.display.video {
 	import flash.net.NetConnection;
 	
 	import flash.events.Event;

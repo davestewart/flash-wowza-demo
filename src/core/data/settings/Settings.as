@@ -1,6 +1,5 @@
-package data.settings
-{
-	import events.ValueEvent;
+package core.data.settings {
+	import core.events.ValueEvent;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	

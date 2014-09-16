@@ -1,4 +1,4 @@
-package display.video {
+package core.display.video {
 
 	import flash.events.Event;
 	import flash.events.MouseEvent;

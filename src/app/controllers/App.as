@@ -1,13 +1,12 @@
-package  
-{
-	import display.video.VideoSettings;
+package app.controllers {
+	import core.display.video.VideoSettings;
 	import flash.display.DisplayObjectContainer;
 	
 	
 	
-	import display.video.VideoPlayer;
-	import display.video.VideoRecorder;
-	import display.views.Controls;
+	import core.display.video.VideoPlayer;
+	import core.display.video.VideoRecorder;
+	import app.display.views.Controls;
 	import dev.WebCam;
 	
 	import assets.ControlsAsset;

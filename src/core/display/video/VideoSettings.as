@@ -1,6 +1,5 @@
-package display.video 
-{
-	import data.settings.Settings;
+package core.display.video {
+	import core.data.settings.Settings;
 	
 	/**
 	 * ...

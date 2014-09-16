@@ -1,5 +1,4 @@
-package controllers 
-{
+package app.controllers {
 	/**
 	 * ...
 	 * @author Dave Stewart

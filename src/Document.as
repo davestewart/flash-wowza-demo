@@ -1,5 +1,6 @@
 package 
 {
+	import app.controllers.App;
 	import dev.WebCam;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -9,10 +10,10 @@ package
 	 * ...
 	 * @author Dave Stewart
 	 */
-	public class Main extends Sprite 
+	public class Document extends Sprite 
 	{
 		
-		public function Main():void 
+		public function Document():void 
 		{
 			MonsterDebugger.initialize(this);
 			
