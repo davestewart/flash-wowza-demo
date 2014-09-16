@@ -1,4 +1,5 @@
-package dev {
+package dev 
+{
 	
 	import assets.ControlsAsset;
 
@@ -19,9 +20,6 @@ package dev {
 	import flash.utils.clearInterval;
 	import flash.utils.setInterval;
 	
-	
-
-
 	/**
 	 * ...
 	 * @author Dave Stewart

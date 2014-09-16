@@ -1,8 +1,8 @@
 package dev
 {
-	import dev.WebCam;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import dev.WebCam;
 	
 	/**
 	 * ...

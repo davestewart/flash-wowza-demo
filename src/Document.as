@@ -1,10 +1,12 @@
 package 
 {
-	import app.controllers.App;
-	import dev.WebCam;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	
 	import com.demonsters.debugger.MonsterDebugger;
+	
+	import app.controllers.App;
+	import dev.WebCam;
 	
 	/**
 	 * ...

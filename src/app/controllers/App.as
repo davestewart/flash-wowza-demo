@@ -1,33 +1,17 @@
-package app.controllers {
-	import core.media.video.VideoSettings;
+package app.controllers 
+{
 	import flash.display.DisplayObjectContainer;
-	
-	
+	import flash.events.MouseEvent;
+	import flash.events.NetStatusEvent;
+	import flash.net.NetConnection;
+	import flash.utils.setInterval;
 	
 	import core.media.video.VideoPlayer;
 	import core.media.video.VideoRecorder;
+	import core.media.video.VideoSettings;
+	
 	import app.display.views.Controls;
-	import dev.WebCam;
 	
-	import assets.ControlsAsset;
-	
-	import flash.events.Event;
-	import flash.events.MouseEvent;
-	import flash.events.NetStatusEvent;
-	
-	import flash.media.Camera;
-	import flash.media.H264Level;
-	import flash.media.H264Profile;
-	import flash.media.H264VideoStreamSettings;
-	import flash.media.Microphone;
-	import flash.media.Video;
-	
-	import flash.net.NetConnection;
-	import flash.net.NetStream;
-	
-	import flash.utils.clearInterval;
-	import flash.utils.setInterval;
-
 	/**
 	 * ...
 	 * @author Dave Stewart
@@ -146,6 +130,16 @@ package app.controllers {
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: public methods
 		
+			
+			
+		// ---------------------------------------------------------------------------------------------------------------------
+		// { region: accessors
+		
+			
+		
+		// ---------------------------------------------------------------------------------------------------------------------
+		// { region: protected methods
+		
 			protected function connect():void 
 			{
 				// create a connection to the wowza media server
@@ -175,20 +169,6 @@ package app.controllers {
 					controls.reset();
 			}
 			
-			
-			
-		// ---------------------------------------------------------------------------------------------------------------------
-		// { region: accessors
-		
-			
-		
-		// ---------------------------------------------------------------------------------------------------------------------
-		// { region: protected methods
-		
-			protected function log(event:NetStatusEvent):void
-			{
-				trace('STATUS: ' + event.info.code+' (' + event.info.description + ')');
-			}
 		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: interface handlers
@@ -357,11 +337,14 @@ package app.controllers {
 			}
 			
 
-		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: utilities
 		
-			
+			protected function log(event:NetStatusEvent):void
+			{
+				trace('STATUS: ' + event.info.code+' (' + event.info.description + ')');
+			}
+		
 	}
 
 }
