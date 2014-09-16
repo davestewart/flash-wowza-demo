@@ -3,6 +3,7 @@ package app.controllers
 	import flash.display.DisplayObjectContainer;
 	import flash.events.MouseEvent;
 	import flash.events.NetStatusEvent;
+	import flash.events.StatusEvent;
 	import flash.net.NetConnection;
 	import flash.utils.setInterval;
 	
@@ -29,12 +30,9 @@ package app.controllers
 				protected var player			:VideoPlayer;
 				protected var recorder			:VideoRecorder;
 				
-			
 			// connection
 				protected var connection		:NetConnection;
 				protected var settings			:VideoSettings;
-				 
-			// server credentials
 				
 			// variables
 				protected var env				:String;
@@ -54,29 +52,24 @@ package app.controllers
 			protected function initialize():void
 			{
 				// settings
-					settings						= new VideoSettings();
+					settings					= new VideoSettings();
 					settings.stream				= 'video';
-				
-				// new settings for wowza live
-					var port			:int			= 1935;
-				
-					
-					env = '';
+					env							= '';
 					
 				// switch settings based on environment
 					switch(env)
 					{
 						case 's3':
-							settings.username				= 'mixoff';
-							settings.password				= '20mixoff14';
+							settings.username			= 'mixoff';
+							settings.password			= '20mixoff14';
 							settings.server				= 'rtmp://54.asda77.120.150/:1935';
 							settings.server				= 'rtmp://mixoff:20mixoff14@54.77.120.150/:1935';
 							settings.server				= 'rtmp://54.77.120.150:1935/mixoff';
 							break;
 							
 						case 'live':
-							settings.username				= 'mixoff';
-							settings.password				= 'mixoff';
+							settings.username			= 'mixoff';
+							settings.password			= 'mixoff';
 							settings.server				= 'rtmp://mixoff:mixoff@localhost/live';
 							settings.server				= 'rtmp://localhost/live';
 							break;
@@ -115,7 +108,9 @@ package app.controllers
 					recorder		= new VideoRecorder();
 					recorder.x		= controls.videoRecord.x;
 					recorder.y		= controls.videoRecord.y;
+					recorder.addEventListener(StatusEvent.STATUS, onRecorderStatus);
 					recorder.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
+					recorder.addEventListener(MouseEvent.CLICK, function(event:MouseEvent):void{ recorder.flipped = ! recorder.flipped});
 					stage.addChild(recorder);
 					
 				// player
@@ -290,8 +285,11 @@ package app.controllers
 								break;
 							
 							case 'NetStream.Unpublish.Success':
-								trace('Published! Now playing...');
-								onPlayClick();
+								trace('Published!');
+								if (controls.cbAutoPlay.selected)
+								{
+									onPlayClick();
+								}
 								break;
 							
 						// record events
@@ -321,6 +319,11 @@ package app.controllers
 					}
 			}
 			
+			protected function onRecorderStatus(event:StatusEvent):void 
+			{
+				trace('RECORDER: ' + event.code);
+			}
+
 			// function to monitor the frame rate and buffer length
 			protected function onStreamInterval():void
 			{

@@ -37,8 +37,8 @@
       <path-element>C:\Program Files (x86)\Development\FlashDevelop\Library\AS3\classes</path-element>
     </source-path>
     <library-path append="true">
-      <path-element>E:\02 - Current\2014-09 - MPC\4 - development\wowza demo\v3\lib\assets.swc</path-element>
       <path-element>E:\02 - Current\2014-09 - MPC\4 - development\wowza demo\v3\lib\MonsterDebugger.swc</path-element>
+      <path-element>E:\02 - Current\2014-09 - MPC\4 - development\wowza demo\v3\lib\webcam.swc</path-element>
     </library-path>
   </compiler>
   <file-specs>

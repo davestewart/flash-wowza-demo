@@ -1,6 +1,7 @@
 package core.media.video 
 {
 	import flash.events.NetStatusEvent;
+	import flash.events.StatusEvent;
 	import flash.media.Camera;
 	import flash.media.H264Level;
 	import flash.media.H264Profile;
@@ -59,6 +60,7 @@ package core.media.video
 				keyframeInterval	= 15;
 				bufferTime			= 20;
 				format				= 'mp4';
+				flipped				= true;
 			}
 
 			
@@ -87,8 +89,7 @@ package core.media.video
 					}
 					else
 					{
-						trace('VideoRecorder: Could not get camera');
-						//sourceVideoLabel.text = "No Camera Found\n";
+						throw new Error('No Camera Found');
 					}
 					
 				// set up the mic
@@ -100,8 +101,7 @@ package core.media.video
 					}
 					else
 					{
-						trace('VideoRecorder: Could not get microphone');
-						//sourceVideoLabel.text += "No Microphone Found\n";
+						log('No Microphone Found', 'error');
 					}
 			}
 
@@ -112,7 +112,7 @@ package core.media.video
 					// variables
 						var width	:int	= _size[0];
 						var height	:int	= _size[1];
-						var rate	:int	= width * height;
+						var rate	:int	= width * height; // alternative bandwidth
 						
 					// set camera properties
 						camera.setMode(width, height, fps);
@@ -136,13 +136,13 @@ package core.media.video
 			public function record(streamName:String = null):void
 			{
 				// debug
-					trace('VideoRecorder: recording...');
+					log('Recording...');
 					
 				// set active
 					_active = true;
 					
 				// setup stream
-					setupStream()
+					setupStream();
 					
 				// add h264 settings
 					if (format == 'mp4')
@@ -153,7 +153,7 @@ package core.media.video
 					}
 
 				// publish the stream by name
-					var mode:String = _append ? "append" : "record"; // can also have "live" and "default", but "record" has NetStream events
+					var mode:String = _append ? "append" : "record"; // can also have "live" and "default", but "record" has NetStream events we can bind to
 					stream.publish(format + ':' + streamName, mode);
 					
 				// add custom metadata to the header of the .flv file
@@ -181,14 +181,14 @@ package core.media.video
 				
 				// this function gets called every 250 ms to monitor the progress of flushing the video buffer.
 				// Once the video buffer is empty we close publishing stream
-					function onCheckBufferInterval():void
+					function onBufferFlush():void
 					{
-						trace('VideoRecorder: Waiting for buffer to empty');
+						log('Waiting for buffer to empty...');
 						if (stream.bufferLength == 0)
 						{
-							trace('VideoRecorder: Buffer is empty!');
+							log('Buffer emptied!');
 							clearInterval(intervalId);
-							finishRecording();
+							onRecordComplete();
 						}
 					}
 
@@ -201,11 +201,10 @@ package core.media.video
 				// After stopping the publishing we need to check if there is video content in the NetStream buffer. 
 				// If there is data we are going to monitor the video upload progress by calling flushVideoBuffer every 250ms.
 					stream.bufferLength > 0
-						? intervalId = setInterval(onCheckBufferInterval, 250)
-						: finishRecording();		
+						? intervalId = setInterval(onBufferFlush, 250)
+						: onRecordComplete();		
 			}
 			
-
 			
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: accessors
@@ -258,17 +257,19 @@ package core.media.video
 				updateCamera();
 			}
 			
+			
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: protected methods
 		
 
-				
-			protected function finishRecording():void
+		
+		// ---------------------------------------------------------------------------------------------------------------------
+		// { region: handlers
+		
+			protected function onRecordComplete():void
 			{
-				// @see http://help.adobe.com/en_US/as3/dev/WS901d38e593cd1bac-3d11a09612fffaf8447-8000.html
-				
 				// debug
-					trace('VideoRecorder: finished recording!')
+					log('Finished recording!')
 					
 				// after we have hit "Stop" recording, and after the buffered video data has been
 				// sent to the Wowza Media Server, close the publishing stream
@@ -276,47 +277,16 @@ package core.media.video
 					stream.close();
 			}
 
-		
-		// ---------------------------------------------------------------------------------------------------------------------
-		// { region: handlers
-		
-			override protected function onNetStatus(event:NetStatusEvent):void
-			{
-				// forward event
-					dispatchEvent(event);
-				
-				// process event
-					switch(event.info.code)
-					{
-						// error events
-							case 'NetStream.Play.StreamNotFound':
-							case 'NetStream.Play.Failed':
-								tf.text = event.info.description;
-								break;
-						
-						// recording events
-							case 'NetStream.Record.Stop':
-								trace(1);
-								stream.publish('null');
-								stream.close();
-								break;
-								
-						// publish events
-							case 'NetStream.Unpublish.Success':
-								trace(2);
-								// After calling stream.publish(false); we wait for a status event of "NetStream.Unpublish.Success" 
-								// which tells us all the video and audio data has been written to the flv file. 
-								// It is at this time  that we can start playing the video we just recorded.
-								break;
-							
-					}
-			}
 
-			
+		
 		// ---------------------------------------------------------------------------------------------------------------------
 		// { region: utilities
 		
-			
+			protected function log(message:String, status:String = 'status'):void
+			{
+				dispatchEvent(new StatusEvent(StatusEvent.STATUS, false, false, message, status));
+			}
+		
 	}
 
 }

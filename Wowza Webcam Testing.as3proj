@@ -55,6 +55,7 @@
   <libraryPaths>
     <element path="lib\assets.swc" />
     <element path="lib\MonsterDebugger.swc" />
+    <element path="lib\webcam.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>

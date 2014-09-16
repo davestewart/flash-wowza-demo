@@ -6,6 +6,9 @@ package core.media.video
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
 	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFormat;
+	import flash.text.TextFormatAlign;
 	
 	/**
 	 * Instantiates a basic NetStreamVideo, then manages playback
@@ -20,16 +23,15 @@ package core.media.video
 		
 			// elements
 				protected var video						:Video;
-				protected var tf						:TextField;
 				
 			// properties
 				protected var _connection				:NetConnection;             
 				protected var _stream					:NetStream;
 				protected var _active					:Boolean;
+				protected var _flipped					:Boolean;
 				
 			// feedback
 				protected var _status					:String;
-				protected var _error					:String;
 				
 			// stream variables
 				protected var _bufferTime				:Number;
@@ -55,13 +57,12 @@ package core.media.video
 		
 			protected function build(width:Number, height:Number):void 
 			{
-				video	= new Video(width, height);
-				addChild(video);
-				
-				tf		= new TextField();
-				//addChild(tf);
-				
-				draw();
+				// video
+					video			= new Video(width, height);
+					addChild(video);
+			
+				// update
+					draw();
 			}
 			
 			protected function reset():void 
@@ -81,7 +82,7 @@ package core.media.video
 				// flag
 					_active	= true;
 				
-				// attach the NetStream object to the right most video object
+				// attach the NetStream
 					video.attachNetStream(_stream);
 					
 				// play the movie you just recorded
@@ -123,33 +124,26 @@ package core.media.video
 			override public function set width(value:Number):void 
 			{
 				video.width = value;
+				draw();
 			}
 			
 			override public function set height(value:Number):void 
 			{
 				video.height = value;
+				draw();
 			}
 			
+			public function get flipped():Boolean { return _flipped; }
+			public function set flipped(value:Boolean):void 
+			{
+				_flipped = value;
+				draw();
+			}
+			
+			public function get connection():NetConnection { return _connection; }
 			public function set connection(connection:NetConnection):void 
 			{
-				if (_connection)
-				{
-					
-				}
-				
-				if(connection == null)
-				{
-					
-				}
-				else
-				{
-					_connection = connection;
-				}
-			}
-			
-			public function get connection():NetConnection 
-			{
-				return _connection;
+				_connection = connection;
 			}
 		
 			public function get stream():NetStream 
@@ -164,10 +158,8 @@ package core.media.video
 			}
 			
 			public function get active():Boolean { return _active; }
-			public function set active(value:Boolean):void 
-			{
-				_active = value;
-			}
+			
+			public function get status():String { return _status; }
 			
 		
 		// ---------------------------------------------------------------------------------------------------------------------
@@ -195,16 +187,14 @@ package core.media.video
 		
 			protected function draw():void 
 			{
-				// status text
-					tf.x		= 0;
-					tf.width	= width;
-					tf.y		= (height - tf.height) / 2;
-					tf.text		= 'hello'
-					
 				// background
 					graphics.clear();
 					graphics.beginFill(0x000000, 0.1);
 					graphics.drawRect(0, 0, width, height);
+					
+				// video
+					video.scaleX	= _flipped ? -1 : 1;
+					video.x			= _flipped ? video.width : 0;
 			}
 		
 		// ---------------------------------------------------------------------------------------------------------------------
@@ -215,13 +205,15 @@ package core.media.video
 				// forward event
 					dispatchEvent(event);
 				
+				// status
+					_status = event.info.description;
+					
 				// action
 					switch(event.info.code)
 					{
 						// error events
 							case 'NetStream.Play.StreamNotFound':
 							case 'NetStream.Play.Failed':
-								tf.text = event.info.description;
 								break;
 							
 						// play events
